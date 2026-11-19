@@ -1,28 +1,30 @@
-# CM AnrufMonitor 0.2.1
+# CM AnrufMonitor 0.3.0
 
-## Korrektur in 0.2.1
+## Namen für die gesamte Anrufliste
 
-Die Reiter der großen Ansicht werden vollständig angezeigt. Der Windows-Prüflauf erfasst zusätzlich den Einstellungsbereich mit den neuen Zugangsfeldern.
+Unter **Anrufverlauf → Namen für gesamte Liste suchen** lassen sich unbekannte deutsche Rufnummern des gesamten lokal gespeicherten Verlaufs bei Das Örtliche nachschlagen. Der aktuelle Suchtext oder Richtungsfilter begrenzt diesen Lauf nicht.
 
-## Neu seit 0.1
+- **Treffer direkt im Verlauf:** Eindeutige Namen erscheinen bei allen bisherigen und späteren Anrufen derselben vollständigen Nummer sowie im Widget, in der Suche und im CSV-Export.
+- **Einmal pro Nummer:** Unterschiedliche Schreibweisen und mehrere Anrufe derselben Nummer werden zusammengefasst. Bekannte Kontakte, eigene, unterdrückte und interne Nummern werden übersprungen.
+- **Vorhandene Namen behalten Vorrang:** Eigene Kontakte, geprüfte FRITZ!Box-Telefonbücher und Namen aus der Router-Anrufliste stehen vor Internettreffern.
+- **Lokal gespeichert:** Quelle und Prüfdatum sind sichtbar. Positive Treffer werden 30 Tage wiederverwendet, eindeutige Nichttreffer sieben Tage. Ältere Namen bleiben erkennbar und werden beim nächsten manuellen Suchlauf erneut geprüft.
+- **Fortschritt und Abbruch:** Ergebnisse erscheinen während des Laufs. Abbrechen erhält bereits gespeicherte Treffer. Einzelne Nummern lassen sich über **Name suchen und übernehmen** im Kontextmenü abfragen.
+- **Kein API-Schlüssel:** Der eingebaute Anbieter verwendet die öffentliche Webseite von Das Örtliche. Es besteht keine offizielle API-Anbindung; Änderungen an der Webseite können Anpassungen der App erfordern.
 
-- **Anrufe nachladen:** Die App gleicht die FRITZ!Box-Anrufliste beim Start, bei Wiederverbindung, alle fünf Minuten und kurz nach einem beobachteten Gesprächsende ab. So werden auch Anrufe aus Zeiten mit ausgeschaltetem PC sichtbar, soweit sie noch auf der Box gespeichert sind.
-- **Namen automatisch anzeigen:** FRITZ!Box-Telefonbücher werden abgerufen und lokal zwischengespeichert. Eigene Kontakte haben Vorrang. Ein Name aus der Router-Anrufliste dient als weitere Quelle.
-- **Rückwärtssuche im Internet:** Eine kleine Schaltfläche öffnet die ausgewählte deutsche Nummer bei Das Örtliche im Browser. Die App sendet ohne diesen Klick keine Nummern an den Auskunftsdienst und übernimmt keine Web-Ergebnisse automatisch.
-- **Zugang geschützt speichern:** Das FRITZ!Box-Kennwort wird mit Windows-DPAPI für das aktuelle Benutzerkonto geschützt. Separater Verbindungstest, manueller Abgleich und Kennwortlöschen sind enthalten.
-- **Dezente Projektangaben:** Kleine Schaltflächen „Info“ und „Unterstützen“ in großer und kompakter Ansicht; Ersteller C. Mihalik, GitHub-Projekt und freiwillige PayPal-Unterstützung.
-- **Nachvollziehbare Veröffentlichung:** Quellcode, Windows-Build, vier Prüfsuiten, WPF-/DPAPI-Smoke-Test, SHA-256-Prüfsumme und Build-Informationen auf GitHub.
+Die Internet-Suche startet nur auf Klick. Sie übermittelt die unbekannten Rufnummern einzeln, keine Anrufzeiten, Gesprächsdauern, Kontaktliste oder Routerkennwörter. Bei Sperren, verlangter Anmeldung oder nicht erkennbarer Antwortstruktur hält sie an. Ohne eindeutige Zuordnung wird kein neuer Name gesetzt.
 
-## Installation und Update
+Der automatische FRITZ!Box-Anruflistenabgleich und die Telefonbücher bleiben enthalten. So werden auch Anrufe nachgeladen, während der PC ausgeschaltet war, soweit die Box sie noch gespeichert hat. Die blaue Oberfläche mit gelben Akzenten und die kleinen Info-/Unterstützen-Schaltflächen bleiben erhalten. Ersteller: **C. Mihalik**.
 
-`CM-AnrufMonitor_0.2.1_Windows-x64.zip` vollständig entpacken, eine eventuell laufende alte Version beenden und `CM-AnrufMonitor.exe` aus dem neuen Ordner starten. Die .NET-Laufzeit ist enthalten. Bei aktiviertem Windows-Autostart die Einstellung aus dem neuen Programmordner erneut speichern, damit der Startpfad stimmt.
+## Installation oder Update
 
-Einstellungen, Kontakte und Verlauf aus 0.1.0 bleiben im bisherigen Benutzerordner lesbar. Der neue automatische Abgleich ist zunächst ausgeschaltet und wird erst mit dem eigenen FRITZ!Box-Zugang eingerichtet. In `Anleitung.html` stehen die Schritte für die Live-Anzeige auf Port 1012 und den getrennten TR-064-Abgleich auf Port 49000.
+`CM-AnrufMonitor_0.3.0_Windows-x64.zip` vollständig entpacken, eine laufende ältere Version beenden und `CM-AnrufMonitor.exe` aus dem neuen Ordner starten. Die .NET-Laufzeit ist enthalten. Bestehende Einstellungen, Kontakte und der Verlauf bleiben im Datenordner erhalten. Bei aktiviertem Windows-Autostart die Einstellung aus dem neuen Ordner erneut speichern.
 
-## Grenzen dieser Vorabversion
+Zugangsdaten ausschließlich in der App eingeben. Die Einrichtung des lokalen FRITZ!Box-Abgleichs ist in `Anleitung.html` beschrieben. Für die Internet-Suche unter **Einrichtung** die Landesvorwahl und bei Bedarf die eigene Ortsvorwahl prüfen.
 
-Die App kann keine auf der Box gelöschten Anrufe nachholen. Historische Zeiten und Dauern sind teilweise nur minutengenau; importierte Dauern tragen „≈“. Mehrdeutige Zuordnungen, etwa bei unterdrückten Nummern, bleiben als getrennte Einträge erhalten. Die Rückwärtssuche findet nur passende veröffentlichte deutsche Telefonbucheinträge. Es gibt keine Telefonie-/Audiofunktion.
+## Prüfstand und Grenzen
 
-Der Windows-Smoke-Test verwendet künstliche Daten. Ein Test an der tatsächlichen FRITZ!Box des Anwenders steht noch aus. Die EXE ist nicht mit einem Herausgeberzertifikat signiert. Der mitgelieferte Prüfbericht und `BUILD-INFO.json` beschreiben den Stand; die PNGs im Release zeigen die laufende Windows-Oberfläche mit markiertem Demo-Anruf.
+Sechs Prüfsuiten prüfen Netzwerk, Routerabgleich, Speicher, Rückwärtssuche und Antwortparser. Ein nativer Windows-Smoke-Test prüft die tatsächliche WPF-Oberfläche, DPAPI und die Anzeige erkannter Namen mit einem synthetischen Anbieter. Die PNGs im Release zeigen ausdrücklich markierte Testdaten. Der Prüfbericht beschreibt die getrennte Prüfung der aktuellen Anbieterwebseite.
+
+Ein Test an der tatsächlichen FRITZ!Box des Anwenders steht noch aus. Die Rückwärtssuche findet nur passende veröffentlichte deutsche Telefonbucheinträge. Angezeigte Namen bestätigen nicht die Identität des tatsächlichen Anrufers. Die EXE ist nicht mit einem Herausgeberzertifikat signiert. Es handelt sich um eine Vorabversion.
 
 [Projekt und Anleitung](https://github.com/ceromihalik-dev/CM-AnrufMonitor) · [Build und Prüfungen](https://github.com/ceromihalik-dev/CM-AnrufMonitor/actions)

@@ -17,3 +17,5 @@ artifacts/
 *.log
 *.zip
 qa-output/
+**/reverse-lookup.json
+**/reverse-lookup*.json

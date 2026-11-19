@@ -44,7 +44,7 @@
      <Border Grid.Column="3" Style="{StaticResource Card}" Padding="14,9"><StackPanel><TextBlock Text="VERPASST HEUTE" FontSize="10" Foreground="{StaticResource MutedBrush}" /><TextBlock x:Name="MissedCount" Text="0" FontSize="27" FontWeight="SemiBold" Foreground="#FFAFB3" /></StackPanel></Border>
     </Grid>
 
-    <Border Grid.Row="1" Background="#23112F61" BorderBrush="#55BBD9FF" BorderThickness="1" CornerRadius="12" Padding="20,15" Margin="0,0,0,13">
+    <Border x:Name="HeroCard" Grid.Row="1" Background="#23112F61" BorderBrush="#55BBD9FF" BorderThickness="1" CornerRadius="12" Padding="20,15" Margin="0,0,0,13">
      <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
       <StackPanel>
        <StackPanel Orientation="Horizontal"><TextBlock x:Name="HeroState" Text="BEREIT FÜR DEN ERSTEN ANRUF" FontSize="10" FontWeight="Bold" Foreground="{StaticResource YellowBrush}" /><TextBlock x:Name="ActiveCountText" Text="" FontSize="10" Foreground="{StaticResource MutedBrush}" Margin="14,0,0,0" /></StackPanel>
@@ -62,25 +62,31 @@
 
     <TabControl x:Name="MainTabs" Grid.Row="2">
      <TabItem Header="Anrufverlauf">
-      <Grid><Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+      <Grid><Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
        <Grid Margin="0,0,0,11"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="140" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
         <TextBox x:Name="SearchBox" TextChanged="Filter_Changed" ToolTip="Nach Name, Rufnummer oder eigener Rufnummer suchen" Margin="0,0,9,0" />
         <ComboBox x:Name="FilterBox" Grid.Column="1" SelectionChanged="Filter_Changed" SelectedIndex="0" Margin="0,0,9,0"><ComboBoxItem Content="Alle Anrufe" /><ComboBoxItem Content="Verpasst" /><ComboBoxItem Content="Eingehend" /><ComboBoxItem Content="Ausgehend" /></ComboBox>
         <Button Grid.Column="2" Content="CSV exportieren" Click="Export_Click" Margin="0,0,8,0" />
         <Button Grid.Column="3" Content="Leeren" Click="ClearHistory_Click" ToolTip="Gespeicherten Verlauf nach Bestätigung leeren" />
        </Grid>
-       <Border Grid.Row="1" CornerRadius="8" BorderBrush="{StaticResource LineBrush}" BorderThickness="1" ClipToBounds="True">
+       <StackPanel Grid.Row="1" Margin="0,0,0,10">
+        <WrapPanel><Button x:Name="LookupAllNamesButton" Content="Namen für gesamte Liste suchen" Click="LookupAllNames_Click" Style="{StaticResource AccentButton}" Margin="0,0,9,5" /><Button x:Name="CancelNameLookupButton" Content="Abbrechen" Click="CancelNameLookup_Click" Margin="0,0,9,5" Visibility="Collapsed" /><TextBlock Text="Gesamter Verlauf · unabhängig vom Suchfilter" FontSize="10" Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center" Margin="0,0,0,5" /></WrapPanel>
+        <TextBlock Text="Unbekannte externe Rufnummern werden einzeln an Das Örtliche übermittelt. Vorhandene Kontaktnamen behalten Vorrang." TextWrapping="Wrap" FontSize="10" LineHeight="15" Foreground="{StaticResource MutedBrush}" />
+        <ProgressBar x:Name="NameLookupProgress" Height="5" Minimum="0" Maximum="1" Value="0" Foreground="{StaticResource YellowBrush}" Background="#32102E5A" BorderThickness="0" Margin="0,8,0,5" Visibility="Collapsed" />
+        <TextBlock x:Name="NameLookupStatus" Text="" TextWrapping="Wrap" FontSize="11" Foreground="{StaticResource MutedBrush}" Margin="0,4,0,0" Visibility="Collapsed" />
+       </StackPanel>
+       <Border Grid.Row="2" CornerRadius="8" BorderBrush="{StaticResource LineBrush}" BorderThickness="1" ClipToBounds="True">
         <Grid>
          <DataGrid x:Name="HistoryGrid" SelectionChanged="History_SelectionChanged" MouseDoubleClick="History_DoubleClick" ToolTip="Doppelklick auf einen Eintrag zeigt alle Anrufdetails.">
           <DataGrid.Columns>
            <DataGridTextColumn Header="STATUS" Binding="{Binding StateText}" Width="122"><DataGridTextColumn.ElementStyle><Style TargetType="TextBlock"><Setter Property="Foreground" Value="{Binding StateBrush}" /></Style></DataGridTextColumn.ElementStyle></DataGridTextColumn>
            <DataGridTextColumn Header="ZEIT" Binding="{Binding TimeText}" Width="113" />
-           <DataGridTextColumn Header="KONTAKT" Binding="{Binding Name}" Width="*" MinWidth="120" />
+           <DataGridTextColumn Header="KONTAKT" Binding="{Binding Name}" Width="*" MinWidth="120"><DataGridTextColumn.ElementStyle><Style TargetType="TextBlock"><Setter Property="TextTrimming" Value="CharacterEllipsis" /><Setter Property="ToolTip" Value="{Binding NameSource}" /></Style></DataGridTextColumn.ElementStyle></DataGridTextColumn>
            <DataGridTextColumn Header="RUFNUMMER" Binding="{Binding Number}" Width="142" />
            <DataGridTextColumn Header="EIGENE NR." Binding="{Binding LocalNumber}" Width="123" />
            <DataGridTextColumn Header="DAUER" Binding="{Binding Duration}" Width="69" />
           </DataGrid.Columns>
-          <DataGrid.ContextMenu><ContextMenu><MenuItem Header="Rufnummer kopieren" Click="CopySelected_Click" /><MenuItem Header="Rückwärtssuche bei Das Örtliche …" Click="ReverseSelected_Click" /><MenuItem Header="Als Kontakt übernehmen" Click="ContactFromCall_Click" /><MenuItem Header="Details anzeigen" Click="ShowDetails_Click" /></ContextMenu></DataGrid.ContextMenu>
+          <DataGrid.ContextMenu><ContextMenu><MenuItem Header="Rufnummer kopieren" Click="CopySelected_Click" /><MenuItem Header="Name suchen und übernehmen" Click="LookupSelectedName_Click" /><MenuItem Header="Rückwärtssuche im Browser …" Click="ReverseSelected_Click" /><MenuItem Header="Als Kontakt übernehmen" Click="ContactFromCall_Click" /><MenuItem Header="Details anzeigen" Click="ShowDetails_Click" /></ContextMenu></DataGrid.ContextMenu>
          </DataGrid>
          <StackPanel x:Name="EmptyHistory" VerticalAlignment="Center" HorizontalAlignment="Center" IsHitTestVisible="False" Margin="20">
           <TextBlock x:Name="EmptyHistoryTitle" Text="Hier erscheinen deine Anrufe" FontSize="19" HorizontalAlignment="Center" />
@@ -88,7 +94,7 @@
          </StackPanel>
         </Grid>
        </Border>
-       <TextBlock x:Name="HistoryFooter" Grid.Row="2" Text="Suche: Name oder Rufnummer eingeben. Nur während der Überwachung erfasste Anrufe." Style="{StaticResource MutedText}" FontSize="10" Margin="2,9,0,0" TextWrapping="Wrap" />
+       <TextBlock x:Name="HistoryFooter" Grid.Row="3" Text="Suche: Name oder Rufnummer eingeben. Anrufe aus Live-Anzeige und FRITZ!Box-Abgleich." Style="{StaticResource MutedText}" FontSize="10" Margin="2,9,0,0" TextWrapping="Wrap" />
       </Grid>
      </TabItem>
      <TabItem Header="Kontakte">
@@ -139,6 +145,7 @@
         <DockPanel Margin="0,13,0,0"><TextBlock Text="Deckkraft" VerticalAlignment="Center" Margin="0,0,15,0" /><TextBlock x:Name="OpacityText" DockPanel.Dock="Right" Text="100 %" Width="52" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="12,0,0,0" /><Slider x:Name="OpacitySlider" Minimum="70" Maximum="100" Value="100" TickFrequency="5" IsSnapToTickEnabled="True" ValueChanged="OpacitySlider_ValueChanged" VerticalAlignment="Center" /></DockPanel>
        </StackPanel></Border>
        <Border Style="{StaticResource Card}" Margin="0,0,0,13"><StackPanel><TextBlock Text="Rufnummern richtig zuordnen" Style="{StaticResource SectionTitle}" /><Grid><Grid.ColumnDefinitions><ColumnDefinition Width="160" /><ColumnDefinition Width="180" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions><StackPanel Margin="0,0,12,0"><TextBlock Text="LANDESVORWAHL" FontSize="10" Margin="0,0,0,5" /><TextBox x:Name="CountryCodeBox" Text="+49" /></StackPanel><StackPanel Grid.Column="1" Margin="0,0,18,0"><TextBlock Text="ORTSVORWAHL (OPTIONAL)" FontSize="10" Margin="0,0,0,5" /><TextBox x:Name="AreaCodeBox" /></StackPanel><TextBlock Grid.Column="2" Text="Beispiel: +49 und 030. So passen +49 30 … und 030 … zum selben Kontakt." TextWrapping="Wrap" Foreground="{StaticResource MutedBrush}" FontSize="12" VerticalAlignment="Bottom" /></Grid></StackPanel></Border>
+       <Border Style="{StaticResource Card}" Margin="0,0,0,13"><StackPanel><TextBlock Text="Gespeicherte Internetnamen" Style="{StaticResource SectionTitle}" /><TextBlock x:Name="InternetCacheInfo" Text="Die Internetsuche startet nur über einen ausdrücklichen Klick im Anrufverlauf. Treffer werden lokal gespeichert und für passende Anrufe wiederverwendet." TextWrapping="Wrap" FontSize="12" LineHeight="20" Foreground="{StaticResource MutedBrush}" Margin="0,0,0,12" /><Button x:Name="ClearLookupCacheButton" Content="Suchergebnisse löschen" Click="ClearLookupCache_Click" HorizontalAlignment="Left" /></StackPanel></Border>
        <StackPanel Orientation="Horizontal"><Button Content="Einstellungen speichern" Click="SaveSettings_Click" Style="{StaticResource AccentButton}" /><TextBlock x:Name="SettingsSavedText" Text="" VerticalAlignment="Center" Margin="14,0,0,0" Foreground="{StaticResource YellowBrush}" /></StackPanel>
       </StackPanel></ScrollViewer>
      </TabItem>
@@ -151,20 +158,22 @@
        <TextBlock Text="Wenn keine Verbindung zustande kommt" FontSize="15" FontWeight="SemiBold" Margin="0,0,0,7" />
        <TextBlock Text="Prüfe die Freischaltung, die Box-Adresse und das Heimnetz. Im Gastnetz ist die Box normalerweise nicht erreichbar. Wenn fritz.box nicht aufgelöst wird, verwende ihre lokale IP-Adresse. Die App verbindet sich nach einem Ausfall automatisch erneut. Bei einer Unterbrechung werden laufende Einträge als „Unvollständig“ gespeichert, damit daraus keine falschen verpassten Anrufe werden." TextWrapping="Wrap" LineHeight="21" Foreground="{StaticResource MutedBrush}" Margin="0,0,0,18" />
        <TextBlock Text="Kontaktnamen anzeigen" FontSize="15" FontWeight="SemiBold" Margin="0,0,0,7" />
-       <TextBlock Text="Mit aktiviertem FRITZ!Box-Abgleich lädt die App die Telefonbücher der Box und frischt sie alle sechs Stunden sowie bei „Jetzt abgleichen“ auf. Eigene, unter Kontakte angelegte oder importierte Einträge haben Vorrang. Danach gelten die Namen aus dem FRITZ!Box-Telefonbuch, anschließend Namen aus der Anrufliste. Für die Rückwärtssuche öffnet ein ausdrücklicher Klick „Das Örtliche“ im Browser und übermittelt diese Rufnummer. Es gibt keine automatische Internetabfrage und keine automatische Übernahme von Internetnamen." TextWrapping="Wrap" LineHeight="21" Foreground="{StaticResource MutedBrush}" Margin="0,0,0,18" />
+       <TextBlock Text="Mit aktiviertem FRITZ!Box-Abgleich lädt die App die Telefonbücher der Box. Eigene Kontakte haben Vorrang, danach gelten passende FRITZ!Box-Telefonbuchnamen und Namen aus der Anrufliste. Über „Namen für gesamte Liste suchen“ lassen sich unbekannte externe Rufnummern des gesamten gespeicherten Verlaufs bei Das Örtliche abfragen. Ein Suchfilter begrenzt diesen Lauf nicht. Jede eindeutige Nummer wird nur einmal angefragt; eindeutige Treffer erscheinen bei allen passenden bisherigen und späteren Anrufen sowie im Widget. Die Suche startet nie von selbst. Eine zusätzliche Browser-Rückwärtssuche bleibt über das Kontextmenü möglich." TextWrapping="Wrap" LineHeight="21" Foreground="{StaticResource MutedBrush}" Margin="0,0,0,18" />
+       <TextBlock Text="Internettreffer und Abbruch" FontSize="15" FontWeight="SemiBold" Margin="0,0,0,7" />
+       <TextBlock Text="Quelle und Prüfdatum stehen im Tooltip des Namens und in den Anrufdetails. Ältere Treffer bleiben als älterer Stand erkennbar und werden beim nächsten manuell gestarteten Lauf erneut geprüft. Vorübergehende Fehler löschen einen bekannten Namen nicht. Kein eindeutiger Treffer bedeutet: Der Name wird nicht geraten. Bei einer Sperre oder erforderlichen Anmeldung stoppt die Suche. Über „Abbrechen“ endet der Lauf; bereits gespeicherte Ergebnisse bleiben erhalten. Die Ergebnisse lassen sich unter Einrichtung getrennt von Kontakten und Anrufverlauf löschen." TextWrapping="Wrap" LineHeight="21" Foreground="{StaticResource MutedBrush}" Margin="0,0,0,18" />
        <TextBlock Text="Ältere Anrufe und Namen abgleichen" FontSize="15" FontWeight="SemiBold" Margin="0,0,0,7" />
        <TextBlock Text="Unter Einrichtung den automatischen Abgleich aktivieren und den FRITZ!Box-Benutzer sowie sein Kennwort speichern. Der Abgleich läuft beim Programmstart, nach Wiederverbindung, regelmäßig alle fünf Minuten und kurz nach einem Gesprächsende. Bereits vorhandene Anrufe werden abgeglichen; laufende Gespräche bleiben bestehen. Aus der Box stammende Gesprächsdauern sind teilweise auf Minuten gerundet. Die Box kann nur Einträge liefern, die sie selbst noch gespeichert hat. Auch ohne aktiven Live-Anrufmonitor kann der Listenabgleich funktionieren." TextWrapping="Wrap" LineHeight="21" Foreground="{StaticResource MutedBrush}" Margin="0,0,0,18" />
        <TextBlock Text="Was die Anzeige bedeutet" FontSize="15" FontWeight="SemiBold" Margin="0,0,0,7" />
        <TextBlock Text="Ohne Listenabgleich enthält der Verlauf nur empfangene Live-Meldungen. Interne Gespräche erscheinen je nach Schnittstelle nicht. „Verpasst“ bedeutet bei Live-Anrufen: Klingeln gesehen, aber keine Annahme gemeldet. Eine Annahme durch Anrufbeantworter oder ein anderes Telefon kann als angenommen erscheinen. Die App dient zur Anzeige; telefoniert wird weiterhin am Telefon. Ein zugeordneter Name ist keine Prüfung der Identität des Anrufers." TextWrapping="Wrap" LineHeight="21" Foreground="{StaticResource MutedBrush}" Margin="0,0,0,18" />
        <TextBlock Text="Daten und Programm" FontSize="15" FontWeight="SemiBold" Margin="0,0,0,7" />
-       <TextBlock x:Name="StorageInfo" Text="Einstellungen, Kontakte und Anrufverlauf werden nur auf diesem PC gespeichert. Es werden keine Daten an externe Dienste übertragen." TextWrapping="Wrap" LineHeight="21" Foreground="{StaticResource MutedBrush}" Margin="0,0,0,12" />
+       <TextBlock x:Name="StorageInfo" Text="Verlauf und Namen werden lokal gespeichert. Internetabfragen werden nur auf ausdrücklichen Wunsch ausgeführt." TextWrapping="Wrap" LineHeight="21" Foreground="{StaticResource MutedBrush}" Margin="0,0,0,12" />
        <StackPanel Orientation="Horizontal"><Button Content="Datenordner öffnen" Click="OpenDataFolder_Click" Margin="0,0,9,0" /><Button Content="Programm beenden" Click="Exit_Click" /></StackPanel>
        <Border BorderBrush="{StaticResource LineBrush}" BorderThickness="0,1,0,0" Margin="0,20,0,0" Padding="0,16,0,0"><StackPanel><TextBlock x:Name="AboutVersionText" Text="CM AnrufMonitor" FontWeight="SemiBold" /><TextBlock Text="Ersteller: C. Mihalik · Eigenständige Anwendung für Windows 10 und 11" Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="0,5,0,0" /><TextBlock Text="FRITZ!Box ist eine Marke ihres jeweiligen Rechteinhabers. Diese App ist kein offizielles FRITZ!-Produkt." Foreground="{StaticResource MutedBrush}" FontSize="10" TextWrapping="Wrap" Margin="0,9,0,0" /></StackPanel></Border>
       </StackPanel></ScrollViewer>
      </TabItem>
     </TabControl>
 
-    <DockPanel Grid.Row="3" Margin="0,13,0,0"><StackPanel Orientation="Horizontal" DockPanel.Dock="Right"><Button Content="Info" Click="Info_Click" Style="{StaticResource SmallButton}" Padding="9,3" MinHeight="25" Margin="8,0,6,0" /><Button Content="Unterstützen" Click="Support_Click" Style="{StaticResource SmallButton}" Padding="9,3" MinHeight="25" /></StackPanel><TextBlock x:Name="FooterStatus" Text="Lokal auf diesem PC · Keine Cloud-Verbindung" Style="{StaticResource MutedText}" FontSize="10" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" /></DockPanel>
+    <DockPanel Grid.Row="3" Margin="0,13,0,0"><StackPanel Orientation="Horizontal" DockPanel.Dock="Right"><Button Content="Info" Click="Info_Click" Style="{StaticResource SmallButton}" Padding="9,3" MinHeight="25" Margin="8,0,6,0" /><Button Content="Unterstützen" Click="Support_Click" Style="{StaticResource SmallButton}" Padding="9,3" MinHeight="25" /></StackPanel><TextBlock x:Name="FooterStatus" Text="Lokal gespeicherter Verlauf · Namenssuche nur auf Wunsch" Style="{StaticResource MutedText}" FontSize="10" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" /></DockPanel>
    </Grid>
 
    <Grid x:Name="CompactContent" Grid.Row="2" Visibility="Collapsed">

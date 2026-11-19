@@ -1,4 +1,4 @@
-CM ANRUFMONITOR 0.2.1
+CM ANRUFMONITOR 0.3.0
 Ersteller: C. Mihalik
 Windows 10 / 11, 64-Bit
 
@@ -66,14 +66,34 @@ WAS AUTOMATISCH PASSIERT
 NAMENSANZEIGE UND INTERNET-SUCHE
 
 Reihenfolge: eigene Kontakte > automatisch geladene FRITZ!Box-Telefonbücher
-> Name aus der FRITZ!Box-Anrufliste. Eigene Kontakte lassen sich manuell
-anlegen oder aus XML/CSV importieren. Beispiel-Kontakte.csv zeigt das Format.
+> Name aus der FRITZ!Box-Anrufliste > gespeicherter Internetname.
+Eigene Kontakte lassen sich manuell anlegen oder aus XML/CSV importieren.
 Landes- und Ortsvorwahl unter "Einrichtung" passend einstellen.
 
-"Rückwärtssuche" öffnet Das Örtliche im Standardbrowser und übermittelt
-NUR NACH DIESEM AUSDRÜCKLICHEN KLICK die ausgewählte Rufnummer dorthin.
-Es gibt keine automatische Internetabfrage unbekannter Anrufe und keine
-automatische Übernahme von Internetnamen. Unterdrückte Nummern bleiben unbekannt.
+Im Anrufverlauf "Namen für gesamte Liste suchen" wählen. Der Lauf umfasst
+alle lokal gespeicherten Anrufe, unabhängig vom aktuellen Suchtext oder Filter.
+Unbekannte deutsche Nummern werden einzeln an Das Örtliche übermittelt;
+jede eindeutige vollständige Nummer wird nur einmal abgefragt. Bereits
+vorhandene Kontakte behalten Vorrang. Ein API-Schlüssel ist nicht nötig.
+
+Eindeutige Treffer erscheinen bei allen passenden früheren und späteren
+Anrufen, im Widget, in der Verlaufssuche und im CSV-Export. Die Ergebnisse
+werden lokal gespeichert. Quelle und Prüfdatum stehen im Tooltip des Namens
+und in den Details. Über "Abbrechen" lässt sich der Lauf beenden; bereits
+gefundene Namen bleiben erhalten. Die Suche startet nicht von selbst.
+
+Treffer werden 30 Tage ohne neue Anfrage verwendet, Nichttreffer sieben Tage.
+Ältere Namen bleiben mit ihrem Prüfdatum sichtbar und werden im nächsten
+manuellen Suchlauf erneut geprüft. Vorübergehende Fehler löschen sie nicht.
+Ein eindeutiger Nichttreffer oder mehrere unterschiedliche Namen heben eine
+frühere Internetzuordnung auf. Unter Einrichtung lassen sich über
+"Suchergebnisse löschen" nur die gespeicherten Internetergebnisse entfernen.
+
+Für einzelne Nummern: Rechtsklick > "Name suchen und übernehmen".
+"Rückwärtssuche im Browser …" öffnet weiterhin eine externe Browser-Suche.
+Unterdrückte Nummern bleiben unbekannt. Nicht veröffentlichte oder für die
+Rückwärtssuche gesperrte Einträge können nicht erkannt werden. Bei Sperren,
+verlangter Anmeldung oder geänderter Antwortstruktur stoppt die Suche.
 
 BEDIENUNG
 
@@ -121,8 +141,8 @@ https://www.paypal.com/donate/?hosted_button_id=Y39Q96VMSJWG2
 
 PRÜFSTAND UND GRENZEN
 
-Die Prüfsuiten umfassen 168 automatisierte Einzelprüfungen für Kernfunktionen,
-Live-Netzwerk, Verlaufssynchronisierung/Speicherung und TR-064. Sie arbeiten
+Sechs Prüfsuiten prüfen Kernfunktionen, Live-Netzwerk, Verlaufssynchronisierung,
+TR-064 sowie Rückwärtssuche, Namensspeicher und Webseitenparser. Sie arbeiten
 mit synthetischen Daten und lokalen Testgegenstellen. Für den Start der echten
 Windows-Oberfläche und den DPAPI-Schutz enthält der GitHub-Workflow zusätzliche
 Prüfungen unter Windows. Das tatsächliche Ergebnis des jeweiligen Builds steht

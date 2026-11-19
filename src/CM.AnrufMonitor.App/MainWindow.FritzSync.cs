@@ -70,6 +70,7 @@ public partial class MainWindow
 
     private void ChangeRouterScope()
     {
+        CancelNameLookup(contextChanged: true);
         CancelRouterOperation();
         _verifiedRouterIdentity = "";
         _routerPhonebookLoaded = false;

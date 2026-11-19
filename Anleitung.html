@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>CM AnrufMonitor | Anleitung 0.2.1</title>
+<title>CM AnrufMonitor | Anleitung 0.3.0</title>
 <style>
 :root{--blue:#2773cb;--deep:#104281;--yellow:#ffe23a;--ink:#163450;--muted:#5c7189;--line:#dae5f0}
 *{box-sizing:border-box}body{margin:0;background:#eef4fa;color:var(--ink);font:16px/1.65 "Segoe UI",Arial,sans-serif}
@@ -22,9 +22,9 @@ table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;v
 nav{display:flex;flex-wrap:wrap;gap:8px 18px;margin:20px 0 26px;font-size:14px}section{scroll-margin-top:20px}.table-wrap{overflow-x:auto}h3:first-child{margin-top:0}.steps strong{color:#124f91}sup a{font-size:11px;text-decoration:none}.action{display:inline-block;background:#ffe23a;color:#163450;border-radius:6px;padding:8px 14px;font-weight:700;text-decoration:none;margin:6px 8px 0 0}@media print{nav{display:none}.action{padding:0;background:none}a{color:inherit}}
 </style></head>
 <body>
-<header><div class="brand">CM · WINDOWS ANWENDUNGEN</div><h1>Deine Anrufe. Auf dem Desktop.</h1><p>Live sehen, wer anruft. Verpasste Anrufe nachladen. Namen aus deinen FRITZ!Box-Telefonbüchern erkennen. Die Anleitung zu CM AnrufMonitor 0.2.1.</p></header>
+<header><div class="brand">CM · WINDOWS ANWENDUNGEN</div><h1>Deine Anrufe. Auf dem Desktop.</h1><p>Live sehen, wer anruft. Verpasste Anrufe nachladen. Namen aus deinen Telefonbüchern erkennen und für die gesamte Anrufliste nachschlagen. Die Anleitung zu CM AnrufMonitor 0.3.0.</p></header>
 <main>
-<span class="badge">Version 0.2.1</span><span class="badge">Windows 10 / 11 · x64</span><span class="badge">Live-Anzeige + Anruflistenabgleich</span>
+<span class="badge">Version 0.3.0</span><span class="badge">Windows 10 / 11 · x64</span><span class="badge">Live-Anzeige + Anruflistenabgleich</span>
 <nav aria-label="Inhalt"><a href="#start">Start</a><a href="#live">Live-Anzeige</a><a href="#abgleich">Anrufliste einrichten</a><a href="#kontakte">Namen und Rückwärtssuche</a><a href="#bedienung">Bedienung</a><a href="#probleme">Fehlerhilfe</a><a href="#daten">Daten und Kennwort</a><a href="#projekt">Projekt und Prüfstand</a></nav>
 
 <section id="start"><h2>1. Starten und die beiden Verbindungen verstehen</h2>
@@ -81,23 +81,28 @@ nav{display:flex;flex-wrap:wrap;gap:8px 18px;margin:20px 0 26px;font-size:14px}s
 
 <section id="kontakte"><h2>4. Kontaktnamen und Rückwärtssuche</h2>
 <h3>Woher kommt der angezeigte Name?</h3>
-<ol><li><strong>Eigene Kontakte:</strong> manuell angelegte oder über XML/CSV importierte Kontakte in der App haben Vorrang.</li><li><strong>FRITZ!Box-Telefonbücher:</strong> danach verwendet die App die automatisch geladenen Telefonbücher der verbundenen Box.</li><li><strong>Name aus der Anrufliste:</strong> wenn kein passender Kontakt vorhanden ist, kann der von der FRITZ!Box mit dem Anruf gelieferte Name erscheinen.</li></ol>
+<ol><li><strong>Eigene Kontakte:</strong> manuell angelegte oder über XML/CSV importierte Kontakte in der App haben Vorrang.</li><li><strong>FRITZ!Box-Telefonbücher:</strong> danach verwendet die App die automatisch geladenen Telefonbücher der verbundenen Box.</li><li><strong>Name aus der Anrufliste:</strong> wenn kein passender Kontakt vorhanden ist, kann der von der FRITZ!Box mit dem Anruf gelieferte Name erscheinen.</li><li><strong>Internetnamen:</strong> danach verwendet die App eindeutige Ergebnisse einer von dir gestarteten Rückwärtssuche.</li></ol>
 <p>Ist kein Name bekannt, bleibt die Rufnummer sichtbar. Eine unterdrückte Nummer kann nicht nachgeschlagen werden. Die Namenszuordnung bestätigt nicht, wer tatsächlich am anderen Ende spricht.</p>
 <p>Bei eingeschalteter Telefonbuchoption werden die Telefonbücher nach jedem Programmstart neu abgefragt. Nach Prüfung der Gerätekennung kann die App zunächst den bereits gespeicherten Bestand derselben Box anzeigen. Weitere Aktualisierungen erfolgen ungefähr alle sechs Stunden sowie bei <strong>Jetzt abgleichen</strong>. Scheitert nur die Telefonbuchaktualisierung, bleiben vorhandene Kontakte erhalten.</p>
 <h3>Eigene Kontakte pflegen</h3>
 <p>Unter <strong>Kontakte</strong> trägst du einen Namen und eine Nummer ein und wählst <strong>Kontakt hinzufügen</strong>. Einen Anruf kannst du auch per Rechtsklick über <strong>Als Kontakt übernehmen</strong> in die Kontaktverwaltung übernehmen.</p>
 <ul><li><strong>FRITZ!Box-Telefonbuch importieren:</strong> Wähle eine unter <strong>Telefonie → Telefonbuch → Sichern</strong> exportierte XML-Datei. Dieser manuelle Import legt eigene Kontakte an und bleibt vom automatischen Telefonbuchbestand getrennt.</li><li><strong>CSV importieren:</strong> Die beiliegende <code>Beispiel-Kontakte.csv</code> zeigt das Format <code>Name;Nummer</code>. Verwende UTF-8 und Semikolon oder Komma als Trennzeichen.</li><li><strong>Vorwahlen:</strong> Unter <strong>Einrichtung → Rufnummern richtig zuordnen</strong> steht für Deutschland <code>+49</code>. Ergänze deine Ortsvorwahl, wenn lokale Nummern ohne Vorwahl vorkommen, und wähle <strong>Einstellungen speichern</strong>.</li></ul>
 <p>Beispiel: Mit Landesvorwahl <code>+49</code> und Ortsvorwahl <code>030</code> passen <code>030 123456</code>, <code>+49 30 123456</code> und <code>123456</code> zum selben Kontakt. Ohne passende Ortsvorwahl setzt die App Nummern nicht allein wegen gleicher Endziffern gleich.</p>
-<h3>Rückwärtssuche bei Das Örtliche</h3>
-<p>Klicke beim angezeigten Anruf auf <strong>Rückwärtssuche ↗</strong> oder wähle im Verlauf per Rechtsklick <strong>Rückwärtssuche bei Das Örtliche …</strong>. Der Standardbrowser öffnet die Suche mit der ausgewählten externen Rufnummer.</p>
-<div class="note"><strong>Nur dieser ausdrückliche Klick übermittelt die Nummer an Das Örtliche.</strong> Die App fragt unbekannte Nummern nicht automatisch im Internet ab und übernimmt Suchergebnisse nicht automatisch als Kontaktnamen. Ob ein Treffer vorhanden ist, hängt vom Verzeichnis ab.</div>
-<p>Für unterdrückte Rufnummern, interne Nebenstellen und unvollständige Ortsnummern ist diese Suche nicht verfügbar. Ergänze bei Ortsnummern zuerst die passende Ortsvorwahl.</p>
+<h3>Namen für die gesamte Anrufliste suchen</h3>
+<ol><li>Öffne <strong>Anrufverlauf</strong> und klicke auf <strong>Namen für gesamte Liste suchen</strong>. Der Lauf berücksichtigt alle lokal gespeicherten Anrufe, auch bei einem aktiven Suchtext oder Filter.</li><li>Unbekannte externe deutsche Nummern werden zusammengefasst und einzeln bei Das Örtliche abgefragt. Bekannte Kontakte, eigene Nummern, interne Nebenstellen und unterdrückte Nummern werden übersprungen.</li><li>Eindeutige Treffer erscheinen sofort bei allen passenden bisherigen Anrufen. Spätere Anrufe derselben Nummer, das Widget, die Suche und der CSV-Export verwenden den gespeicherten Namen ebenfalls.</li><li>Fortschritt und Ergebniszahlen stehen direkt im Verlauf. Mit <strong>Abbrechen</strong> stoppst du die Suche; bereits gespeicherte Treffer bleiben erhalten.</li></ol>
+<div class="note"><strong>Der Suchlauf übermittelt die unbekannten Rufnummern an Das Örtliche.</strong> Er startet nur auf deinen Klick. Anrufzeiten, Gesprächsdauern, Kontakte und Routerkennwort werden nicht übermittelt. Die App braucht dafür keinen API-Schlüssel. Für eine lange Liste kann der Lauf mehrere Minuten dauern, da Anfragen nacheinander mit mindestens zwei Sekunden Abstand erfolgen.</div>
+<p>Quelle und Prüfdatum stehen im Tooltip des Namens und in den Anrufdetails. Eigene Kontakte und vorhandene FRITZ!Box-Namen behalten Vorrang. Die App rät keine Namen bei mehreren unterschiedlichen Treffern und bestätigt damit nicht die tatsächliche Identität des Anrufers.</p>
+<p>Treffer werden 30 Tage wiederverwendet, eindeutige Nichttreffer sieben Tage. Danach werden sie beim nächsten manuell gestarteten Lauf erneut geprüft. Ältere Namen bleiben mit einem Hinweis auf den älteren Prüfstand sichtbar. Vorübergehende Fehler löschen sie nicht; eine neue eindeutige Antwort ohne Treffer oder mit mehreren unterschiedlichen Namen hebt die frühere Zuordnung auf.</p>
+<p>Über <strong>Einrichtung → Gespeicherte Internetnamen → Suchergebnisse löschen</strong> leerst du nur diesen Speicher. Eigene Kontakte, Routerkontakte und der Verlauf bleiben erhalten.</p>
+<h3>Einzelne Nummer oder Suche im Browser</h3>
+<p>Per Rechtsklick auf einen Anruf wählst du <strong>Name suchen und übernehmen</strong>. Die zusätzliche Option <strong>Rückwärtssuche im Browser …</strong> und die Schaltfläche <strong>Rückwärtssuche ↗</strong> öffnen die ausgewählte Nummer im Standardbrowser.</p>
+<p>Es werden nur veröffentlichte deutsche Rufnummern gefunden, für die kein Widerspruch gegen die Rückwärtssuche vorliegt. Unvollständige Ortsnummern benötigen zuerst die richtige Ortsvorwahl unter Einrichtung. Bei einer Sperre, verlangter Anmeldung oder nicht erkennbarer Webseite stoppt der Lauf. Eine Änderung der Anbieterwebseite kann ein App-Update erforderlich machen.</p>
 </section>
 
 <section id="bedienung"><h2>5. Desktop-Fenster und Anrufverlauf bedienen</h2>
 <p>Über <strong>Widget</strong> wird aus dem Hauptfenster eine kleine, frei verschiebbare Anzeige. Unter <strong>Einrichtung → Desktop und Benachrichtigungen</strong> kannst du <strong>Fenster immer im Vordergrund halten</strong>, Benachrichtigungen, Windows-Start und Deckkraft einstellen. Übernimm die Änderungen mit <strong>Einstellungen speichern</strong>.</p>
 <p>Das Kreuz oben rechts blendet das Fenster aus; die App läuft im Infobereich weiter. Über das Symbol neben der Windows-Uhr kannst du sie anzeigen oder beenden. Zum vollständigen Beenden gibt es außerdem <strong>Hilfe &amp; Info → Programm beenden</strong>.</p>
-<p>Im <strong>Anrufverlauf</strong> suchst du nach Name, Rufnummer oder eigener Nummer. Der Filter unterscheidet alle, verpasste, eingehende und ausgehende Anrufe. Ein Doppelklick zeigt Details. Per Rechtsklick kannst du die Nummer kopieren, die Rückwärtssuche öffnen oder einen eigenen Kontakt anlegen. <strong>CSV exportieren</strong> exportiert den angezeigten Verlauf einschließlich der Kennzeichnung genauer beziehungsweise gerundeter Dauern.</p>
+<p>Im <strong>Anrufverlauf</strong> suchst du nach Name, Rufnummer oder eigener Nummer. Der Filter unterscheidet alle, verpasste, eingehende und ausgehende Anrufe. Ein Doppelklick zeigt Details. Per Rechtsklick kannst du die Nummer kopieren, einen Namen suchen und übernehmen, die Browser-Rückwärtssuche öffnen oder einen eigenen Kontakt anlegen. <strong>CSV exportieren</strong> exportiert den angezeigten Verlauf einschließlich der Kennzeichnung genauer beziehungsweise gerundeter Dauern.</p>
 <div class="table-wrap"><table><thead><tr><th>Status</th><th>Bedeutung</th></tr></thead><tbody>
 <tr><td>Klingelt</td><td>Die FRITZ!Box meldet einen eingehenden Ruf.</td></tr>
 <tr><td>Wählt</td><td>Ein ausgehender Anruf wird aufgebaut.</td></tr>
@@ -142,23 +147,24 @@ nav{display:flex;flex-wrap:wrap;gap:8px 18px;margin:20px 0 26px;font-size:14px}s
 <tr><td><code>history.json</code></td><td>Anrufverlauf mit Rufnummern und gegebenenfalls Namen. Nicht zusätzlich verschlüsselt.</td></tr>
 <tr><td><code>contacts.json</code></td><td>Eigene Kontakte und manuelle Importe. Nicht zusätzlich verschlüsselt.</td></tr>
 <tr><td><code>router-contacts.json</code></td><td>Automatisch geladene Routerkontakte, an die überprüfte Gerätekennung gebunden. Nicht zusätzlich verschlüsselt.</td></tr>
+<tr><td><code>reverse-lookup.json</code></td><td>Internetnamen und Nichttreffer mit vollständiger Rufnummer, Quelle und Prüfzeit. Nicht zusätzlich verschlüsselt.</td></tr>
 <tr><td><code>Credentials.bin</code></td><td>Kennwort mit Windows-DPAPI für das aktuelle Benutzerkonto geschützt. Zusätzlich an Box-Adresse, TR-064-Port und Benutzername gebunden.</td></tr>
 </tbody></table></div>
 <p>Nach einem Wechsel des Windows-Benutzerkontos oder PCs kann eine erneute Kennworteingabe erforderlich sein. Das bloße Kopieren der Programmdatei überträgt keinen nutzbaren gespeicherten Zugang. <strong>Kennwort löschen</strong> entfernt den gespeicherten Zugang und schaltet den automatischen Listenabgleich aus; die unabhängige Live-Anzeige bleibt nutzbar.</p>
 <p>Der Callmonitor über Port 1012 überträgt Rufnummern ohne Anmeldung und unverschlüsselt im erreichbaren Netz. Der Listen- und Telefonbuchabruf verwendet in dieser Version <strong>HTTP-Digest über das lokale Netzwerk</strong>. Das Kennwort wird dabei nicht als HTTP-Klartextkennwort gesendet; die abgerufenen Inhalte sind jedoch <strong>nicht mit TLS verschlüsselt</strong>. Verwende diese Zugänge im vertrauenswürdigen Heim-/Büronetz oder über ein passend eingerichtetes VPN.</p>
-<p>Der automatische Abgleich arbeitet mit deiner FRITZ!Box. Eine gewählte Rückwärtssuche öffnet dagegen einen externen Anbieter im Browser und übermittelt ihm die ausgewählte Nummer. Auch die Projekt- und Unterstützungslinks öffnen den Browser.</p>
+<p>Der automatische Abgleich arbeitet mit deiner FRITZ!Box. Ein ausdrücklich gestarteter Internet-Suchlauf sendet unbekannte Nummern einzeln über HTTPS an Das Örtliche. Die zusätzliche Browser-Rückwärtssuche übermittelt die ausgewählte Nummer. Auch die Projekt- und Unterstützungslinks öffnen erst nach einem Klick den Browser.</p>
 <h3>Sichern, aktualisieren und entfernen</h3>
 <p>Beende die App vollständig und sichere bei Bedarf den Datenordner. Für ein Update entpackst du das neue Paket aus den <a href="https://github.com/ceromihalik-dev/CM-AnrufMonitor/releases">GitHub-Veröffentlichungen</a> und startest dessen EXE. Vorhandene Daten desselben Windows-Benutzers bleiben am bisherigen Speicherort. Wenn du den Programmordner verschiebst, speichere die gewünschte Windows-Startoption in der neuen Version erneut.</p>
 <p>Zum Entfernen zuerst <strong>Mit Windows starten</strong> ausschalten und <strong>Einstellungen speichern</strong>. Danach die App beenden und den entpackten Programmordner löschen. Wenn du auch Anrufdaten, Kontakte und gespeicherten Zugang entfernen möchtest, lösche zusätzlich den Datenordner. Den Callmonitor kannst du bei Bedarf am Telefon mit <code>#96*4*</code> deaktivieren.</p>
 </section>
 
 <section id="projekt"><h2>8. Projekt, Unterstützung und Entwicklungsstand</h2>
-<p><strong>CM AnrufMonitor 0.2.1 · Ersteller: C. Mihalik</strong></p>
+<p><strong>CM AnrufMonitor 0.3.0 · Ersteller: C. Mihalik</strong></p>
 <p>Quellcode, Build-Anleitung, Versionshinweise und Prüfbericht stehen im GitHub-Projekt. Das Windows-Programmpaket enthält die startbare Anwendung und die Bedienungsdateien; der Quellcode wird über GitHub bereitgestellt.</p>
 <p><a class="action" href="https://github.com/ceromihalik-dev/CM-AnrufMonitor">Projekt auf GitHub</a><a class="action" href="https://github.com/ceromihalik-dev/CM-AnrufMonitor/releases">Versionen herunterladen</a><a class="action" href="https://www.paypal.com/donate/?hosted_button_id=Y39Q96VMSJWG2">Freiwillig unterstützen</a></p>
 <p>Die App bietet dieselben Links unter <strong>Info</strong> und <strong>Unterstützen</strong>. Eine Unterstützung über PayPal ist freiwillig.</p>
 <h3>Was wurde geprüft?</h3>
-<p>Die Prüfsuiten für diese Version umfassen <strong>168 automatisierte Einzelprüfungen</strong>: 44 für Kernfunktionen, 6 für die Live-TCP-Verbindung, 54 für Verlaufssynchronisierung und Speicherung sowie 64 für die TR-064-Anbindung. Sie verwenden synthetische Daten und lokale Testgegenstellen.</p>
+<p>Die sechs Prüfsuiten decken Kernfunktionen, Live-TCP, Verlaufssynchronisierung, TR-064 sowie die gesamte Rückwärtssuche einschließlich Speicher und Webseitenparser ab. Sie verwenden synthetische Daten und lokale Testgegenstellen. Der Windows-Test prüft zusätzlich, dass erkannte Namen in allen passenden Verlaufszeilen erscheinen und eigene Kontakte Vorrang behalten.</p>
 <p>Für den Start der echten Windows-Oberfläche und den Windows-DPAPI-Kennwortschutz enthält der GitHub-Workflow zusätzliche Prüfungen unter Windows. Das tatsächliche Ergebnis für einen bestimmten Build steht im zugehörigen Actions-Lauf und im <a href="https://github.com/ceromihalik-dev/CM-AnrufMonitor/blob/main/PRUEFBERICHT.md">Prüfbericht</a>.</p>
 <p><strong>Ein Test mit einer echten FRITZ!Box steht noch aus.</strong> Prüfe deshalb nach der Einrichtung einen angenommenen, einen verpassten und einen ausgehenden Anruf sowie das Nachladen eines Anrufs bei geschlossener App. Die Kompatibilität kann vom Modell, FRITZ!OS und den Telefonieeinstellungen abhängen.</p>
 <p class="plain">Die Gestaltung verwendet einen Blauverlauf, weiße Schrift, gelbe Bedienelemente und rote Hinweise. Das Widget ist ein eigenes Windows-Fenster; eine Integration in das Windows-11-Widget-Board ist nicht enthalten.</p>
@@ -171,5 +177,5 @@ nav{display:flex;flex-wrap:wrap;gap:8px 18px;margin:20px 0 26px;font-size:14px}s
 <li id="quelle-tr064"><a href="https://fritz.support/resources/TR-064_First_Steps.pdf">FRITZ!: TR-064 First Steps</a> und <a href="https://fritz.support/resources/TR-064_Contact_SCPD.pdf">Telefonbücher und Anrufliste, Rechte und Datenformate</a>.</li>
 <li><a href="https://learn.microsoft.com/en-us/windows/win32/api/dpapi/nf-dpapi-cryptprotectdata">Microsoft: Windows-DPAPI und Benutzerbindung</a>.</li>
 </ol></section>
-<div class="footer">CM AnrufMonitor 0.2.1 · Ersteller: C. Mihalik · Stand: 19. November 2026<br>Unabhängige Anwendung. FRITZ! und FRITZ!Box sind Marken des jeweiligen Rechteinhabers.</div>
+<div class="footer">CM AnrufMonitor 0.3.0 · Ersteller: C. Mihalik · Stand: 19. November 2026<br>Unabhängige Anwendung. FRITZ! und FRITZ!Box sind Marken des jeweiligen Rechteinhabers.</div>
 </main></body></html>

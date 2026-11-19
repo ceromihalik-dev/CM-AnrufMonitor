@@ -1,4 +1,4 @@
-# CM AnrufMonitor 0.2.1
+# CM AnrufMonitor 0.3.0
 
 Ein Windows-Desktopfenster für Anrufe an deiner FRITZ!Box, mit kompakter Widget-Ansicht, automatischem Anruflistenabgleich und Kontaktnamen. Ersteller: **C. Mihalik**.
 
@@ -13,7 +13,7 @@ Die Oberfläche verwendet den gewünschten Blauverlauf von `#2773CB` nach `#1042
 - Gleicht beim Start, nach Wiederverbindung, regelmäßig alle fünf Minuten und kurz nach einem beobachteten Gesprächsende ab.
 - Verbindet Live-Aufzeichnungen und Routereinträge, wenn sie eindeutig zusammengehören. Wiederholtes Abgleichen erzeugt keine neuen Kopien bereits bekannter Routereinträge.
 - Ruft die Telefonbücher der FRITZ!Box ab und zeigt passende Namen im Widget und im Verlauf an.
-- Bietet für unbekannte deutsche Rufnummern eine ausdrücklich angeklickte Internet-Rückwärtssuche über Das Örtliche.
+- Sucht auf Wunsch die unbekannten deutschen Rufnummern der **gesamten Anrufliste** bei Das Örtliche. Eindeutige Namen erscheinen automatisch bei allen passenden Anrufen und bleiben lokal gespeichert.
 - Speichert bis zu 2.000 Anrufe lokal; mit Suche, Filtern und CSV-Export.
 - Bietet eigene Kontakte, XML-/CSV-Import, Infobereich, optionale Vordergrundanzeige, Deckkraft und Windows-Autostart.
 
@@ -50,11 +50,24 @@ Live-Anzeige und Listenabgleich arbeiten unabhängig: Für das Nachladen muss de
 | Eigene Kontakte und manuell importierte Kontakte | Höchste Priorität; lassen sich in der App bearbeiten. |
 | Automatisch geladene FRITZ!Box-Telefonbücher | Werden getrennt zwischengespeichert und der überprüften Box zugeordnet. Mehrere Nummern pro Kontakt sind möglich. |
 | Name aus der FRITZ!Box-Anrufliste | Wird verwendet, wenn kein passender Kontakteintrag vorhanden ist. |
-| Internet-Rückwärtssuche | Öffnet erst nach einem Klick die vollständige deutsche Rufnummer bei Das Örtliche im Standardbrowser. Ergebnisse werden nicht automatisch in die App übernommen. |
+| Internet-Rückwärtssuche | Übernimmt eindeutige Treffer von Das Örtliche nach einem ausdrücklich gestarteten Suchlauf. Die Namen bleiben getrennt von eigenen und Routerkontakten gespeichert. |
 
 Landesvorwahl und Ortsvorwahl unter **Einrichtung** richtig setzen, in Deutschland beispielsweise `+49` und die eigene Ortsvorwahl. So kann die App verschiedene Schreibweisen derselben vollständigen Nummer zuordnen. Sie verwendet keine unsicheren Vergleiche anhand weniger Endziffern.
 
 Die Internet-Rückwärtssuche ist für veröffentlichte deutsche Rufnummern gedacht. Ohne passenden öffentlichen Eintrag oder bei widersprochener Rückwärtssuche gibt es keinen Namen. Unterdrückte Rufnummern kann auch diese App nicht ermitteln. Ein gefundener Name ist eine Zuordnung der übermittelten Nummer, kein Identitätsnachweis des Anrufers.
+
+### Namen für die gesamte Anrufliste suchen
+
+1. Unter **Anrufverlauf** auf **Namen für gesamte Liste suchen** klicken. Der Lauf berücksichtigt alle lokal gespeicherten Anrufe, auch bei aktivem Suchtext oder Richtungsfilter.
+2. Die App überspringt bekannte Kontakte, eigene Nummern, unterdrückte oder interne Nummern sowie nicht unterstützte Nummern. Verschiedene Schreibweisen derselben vollständigen Nummer werden zusammengefasst.
+3. Jede verbleibende deutsche Nummer wird einzeln bei Das Örtliche angefragt. Ein eindeutiger Treffer aktualisiert alle passenden Zeilen, die Suche, den CSV-Export und das Widget. Neue Anrufe derselben Nummer verwenden den gespeicherten Namen ebenfalls.
+4. Fortschritt und Ergebniszahlen erscheinen direkt im Verlauf. **Abbrechen** beendet den Lauf; bereits gespeicherte Ergebnisse bleiben erhalten.
+
+Eine einzelne Nummer lässt sich per Rechtsklick mit **Name suchen und übernehmen** abfragen. **Rückwärtssuche im Browser …** bleibt zusätzlich verfügbar. Für den eingebauten Anbieter ist kein API-Schlüssel nötig. Die App wertet die Webseite eigenständig aus; es besteht keine offizielle API-Anbindung und keine Verbindung zum Betreiber von Das Örtliche oder jFritz. jFritz diente als Referenz für das gewünschte Verhalten, sein Programmcode wurde nicht übernommen.
+
+Die Internetsuche startet nur auf Klick. Sie übermittelt die jeweiligen unbekannten Rufnummern, keine Anrufzeiten, Gesprächsdauern, Kontaktlisten oder Routerkennwörter. Abfragen laufen nacheinander mit mindestens zwei Sekunden Abstand. Bei einer Sperre, verlangter Anmeldung oder nicht mehr erkennbarer Antwortstruktur stoppt der Lauf. Eine veränderte Anbieterwebseite kann ein App-Update erforderlich machen.
+
+**Quelle und Prüfdatum** stehen im Tooltip des Namens und in den Anrufdetails. Positive Treffer werden 30 Tage ohne neue Anfrage wiederverwendet, eindeutige Nichttreffer sieben Tage. Ältere Namen bleiben als älterer Stand sichtbar und werden beim nächsten manuell gestarteten Suchlauf erneut geprüft. Vorübergehende Fehler löschen sie nicht; eine eindeutige neue Antwort ohne Treffer oder mit mehreren unterschiedlichen Namen hebt die frühere Zuordnung auf. Unter **Einrichtung → Gespeicherte Internetnamen → Suchergebnisse löschen** lässt sich dieser Speicher getrennt von Kontakten und Verlauf leeren.
 
 ## Was der Abgleich leisten kann
 
@@ -68,11 +81,11 @@ Für die Zusammenführung werden Gerätekennung, Router-Anruf-ID, Richtung, Star
 
 ## Daten und Verbindung
 
-Einstellungen, eigene Kontakte, Routerkontakt-Cache und Verlauf liegen unter `%LOCALAPPDATA%\CM\AnrufMonitor`. Das Kennwort liegt separat in `Credentials.bin`, mit DPAPI für das aktuelle Windows-Benutzerkonto geschützt und an Routeradresse, Port und Benutzer gebunden. Anruf- und Kontaktdaten sind lokale, nicht zusätzlich verschlüsselte Dateien. Das Kopieren des Datenordners auf ein anderes Windows-Konto ersetzt keine erneute Kennworteingabe.
+Einstellungen, eigene Kontakte, Routerkontakt-Cache, Internetnamen und Verlauf liegen unter `%LOCALAPPDATA%\CM\AnrufMonitor`. `reverse-lookup.json` enthält Nummern, gefundene Namen, Quelle und Prüfzeitpunkte. Das Kennwort liegt separat in `Credentials.bin`, mit DPAPI für das aktuelle Windows-Benutzerkonto geschützt und an Routeradresse, Port und Benutzer gebunden. Anruf-, Kontakt- und Rückwärtssuchedaten sind lokale, nicht zusätzlich verschlüsselte Dateien. Das Kopieren des Datenordners auf ein anderes Windows-Konto ersetzt keine erneute Kennworteingabe.
 
 Die App liest die Box im eigenen Heimnetz oder über eine bestehende passende VPN-Verbindung. Der Callmonitor auf TCP 1012 ist unverschlüsselt. Diese Version nutzt für TR-064 HTTP mit Digest-Anmeldung auf 49000; Digest verschlüsselt nicht die übertragenen Anruf- und Kontaktdaten. Es ist keine TLS-Verbindung auf 49443 implementiert. Keine Internet-Portfreigabe für diese Dienste einrichten.
 
-TR-064-Zugriffe sind auf lokale/private Adressen begrenzt. Downloadadressen aus der Box werden geprüft, Weiterleitungen und fremde Zielserver abgelehnt. XML-DTDs und externe Entitäten sind deaktiviert. Es gibt keine Telemetrie. Browser-Schaltflächen für Projekt, freiwillige Unterstützung und Rückwärtssuche öffnen erst nach einem Klick den jeweiligen externen Dienst.
+TR-064-Zugriffe sind auf lokale/private Adressen begrenzt. Downloadadressen aus der Box werden geprüft, Weiterleitungen und fremde Zielserver abgelehnt. XML-DTDs und externe Entitäten sind deaktiviert. Es gibt keine Telemetrie. Die Internet-Namenssuche sowie Browser-Schaltflächen für Projekt, freiwillige Unterstützung und Rückwärtssuche kontaktieren erst nach einem Klick den jeweiligen externen Dienst.
 
 ## Bauen und prüfen
 
@@ -86,7 +99,7 @@ Unter Windows in PowerShell:
 .\tools\Package-Windows.ps1
 ```
 
-`Build.ps1` führt vier Prüfsuiten aus und erzeugt die eigenständig startbare EXE mit eingebetteter Laufzeit. Die Windows-Ausführungsrichtlinie muss die Ausführung des lokalen Skripts erlauben; das Skript ändert keine Richtlinie. Ein ARM64-Build ist mit `Build.ps1 -Runtime win-arm64` möglich. Veröffentlicht wird x64.
+`Build.ps1` führt sechs Prüfsuiten aus und erzeugt die eigenständig startbare EXE mit eingebetteter Laufzeit. Die Windows-Ausführungsrichtlinie muss die Ausführung des lokalen Skripts erlauben; das Skript ändert keine Richtlinie. Ein ARM64-Build ist mit `Build.ps1 -Runtime win-arm64` möglich. Veröffentlicht wird x64.
 
 Die plattformunabhängigen Prüfungen lassen sich einzeln ausführen:
 
@@ -95,9 +108,11 @@ dotnet run --project tests/CoreChecks/CoreChecks.csproj -c Release
 dotnet run --project tests/NetworkChecks/NetworkChecks.csproj -c Release
 dotnet run --project tests/HistorySyncChecks/HistorySyncChecks.csproj -c Release
 dotnet run --project tests/Tr064Checks/Tr064Checks.csproj -c Release
+dotnet run --project tests/ReverseLookupChecks/ReverseLookupChecks.csproj -c Release
+dotnet run --project tests/ReverseLookupProviderChecks/ReverseLookupProviderChecks.csproj -c Release
 ```
 
-Der Windows-Smoke-Test öffnet ein echtes WPF-Fenster mit eindeutig markierten Demo-Daten, prüft DPAPI und vollständig sichtbare Reiterbeschriftungen und rendert Vollansicht, Einrichtung und Widget. Er verwendet einen isolierten temporären Datenordner, verbindet sich nicht mit einem Router und verändert keinen Autostart. `smoke-result.json` und die PNGs dokumentieren diesen begrenzten Test, keinen echten Telefonanruf.
+Der Windows-Smoke-Test öffnet ein echtes WPF-Fenster mit eindeutig markierten Demo-Daten, prüft DPAPI und vollständig sichtbare Reiterbeschriftungen und rendert Vollansicht, Einrichtung, Verlauf und Widget. Ein synthetischer Anbieter prüft außerdem den Namensabgleich mehrerer Verlaufszeilen, lokale Speicherung und den Vorrang eigener Kontakte. Er verwendet einen isolierten temporären Datenordner, verbindet sich nicht mit einem Router und verändert keinen Autostart. `smoke-result.json` und die PNGs dokumentieren diesen begrenzten Test, keinen echten Telefonanruf.
 
 Der GitHub-Workflow baut unter Windows, führt alle Prüfungen und den WPF-Smoke-Test aus und veröffentlicht erst danach ein als Vorabversion gekennzeichnetes ZIP mit SHA-256-Prüfsumme. Bereits vorhandene Releases einer Version werden nicht überschrieben. `BUILD-INFO.json` im ZIP nennt den verwendeten Quellcode-Commit und den tatsächlichen Prüfstand. Ein echter Praxistest an der FRITZ!Box des Anwenders bleibt erforderlich.
 
@@ -111,6 +126,8 @@ Der GitHub-Workflow baut unter Windows, führt alle Prüfungen und den WPF-Smoke
 | `tests/NetworkChecks` | 6 Szenarien mit echten lokalen TCP-Verbindungen |
 | `tests/HistorySyncChecks` | 54 Prüfungen von Abgleich, Migration und Kontakt-Cache |
 | `tests/Tr064Checks` | 64 Prüfungen einschließlich lokalem Digest-HTTP-Server |
+| `tests/ReverseLookupChecks` | Gesamtlistenplanung, Cache, Prioritäten, eindeutige Nummern, Abbruch und Wiederverwendung |
+| `tests/ReverseLookupProviderChecks` | Webseitenparser, eindeutige Treffer, Mehrdeutigkeiten, Zeit-/Größenbegrenzung und HTTP-Fehler |
 | `.github/workflows/windows-build.yml` | Windows-Prüfung, Paket und Release |
 
 `CallTracker` wird auf einem Thread verwendet; die App führt Änderungen auf dem WPF-Dispatcher zusammen. Gleichzeitige Abrufe werden vermieden. Ein Wechsel des Zugangs verwirft Ergebnisse noch laufender alter Abrufe. Beschädigte JSON-Dateien bleiben als `.broken`-Kopie erhalten und werden sichtbar gemeldet.
@@ -128,6 +145,7 @@ Die App zeigt diese Angaben über kleine Schaltflächen. Die Unterstützung ist 
 - [FRITZ!: Zugriff von Anwendungen einrichten](https://fritz.com/apps/knowledge-base/FRITZ-App-Smart-Home/3668_FRITZ-App-Smart-Home-einrichten/)
 - [fritzconnection: Call Monitoring](https://fritzconnection.readthedocs.io/en/latest/sources/call_monitoring.html)
 - [Home Assistant: FRITZ!Box Call Monitor](https://www.home-assistant.io/integrations/fritzbox_callmonitor/)
+- [jFritz: Funktionshistorie der Rückwärtssuche](https://github.com/jfritz-org/jfritz/blob/develop/Changelog_Full.txt)
 - [Das Örtliche: Voraussetzungen und Grenzen der Rückwärtssuche](https://www.dasoertliche.de/rueckwaertssuche/)
 - [Microsoft: Single-file deployment](https://learn.microsoft.com/en-us/dotnet/core/deploying/single-file/overview)
 

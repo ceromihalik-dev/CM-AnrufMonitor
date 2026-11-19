@@ -10,7 +10,7 @@ if (-not (Get-Command dotnet -ErrorAction SilentlyContinue)) {
 }
 Push-Location $projectRoot
 try {
-    foreach ($checkProject in @('CoreChecks', 'NetworkChecks', 'HistorySyncChecks', 'Tr064Checks')) {
+    foreach ($checkProject in @('CoreChecks', 'NetworkChecks', 'HistorySyncChecks', 'Tr064Checks', 'ReverseLookupChecks', 'ReverseLookupProviderChecks')) {
         Write-Host "Prüfe $checkProject ..."
         & dotnet run --project "tests/$checkProject/$checkProject.csproj" -c Release
         if ($LASTEXITCODE -ne 0) { throw "Die Prüfung $checkProject ist fehlgeschlagen." }

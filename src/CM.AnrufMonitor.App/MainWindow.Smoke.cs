@@ -2,12 +2,15 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
+using CM.AnrufMonitor.Core;
 
 namespace CM.AnrufMonitor.App;
 
@@ -63,6 +66,16 @@ public partial class MainWindow
             CaptureSmokeImage(Path.Combine(outputDirectory, "CM-AnrufMonitor-full-demo.png"));
         }
         double originalHeight = Height;
+        await RunNameLookupSmokeAsync(checks);
+        Height = 600;
+        await Dispatcher.InvokeAsync(UpdateLayout, DispatcherPriority.Render);
+        if (HeroCard.Visibility != Visibility.Collapsed || HistoryGrid.ActualHeight < 75)
+            throw new InvalidOperationException("Name lookup controls leave no usable history area at small window height.");
+        checks.Add("History remains usable at small window height");
+        Height = Math.Max(Height, 820);
+        await Dispatcher.InvokeAsync(UpdateLayout, DispatcherPriority.Render);
+        if (outputDirectory is not null)
+            CaptureSmokeImage(Path.Combine(outputDirectory, "CM-AnrufMonitor-history-demo.png"));
         Height = Math.Max(Height, 1000);
         MainTabs.SelectedIndex = 2;
         await Dispatcher.InvokeAsync(UpdateLayout, DispatcherPriority.Render);
@@ -86,6 +99,88 @@ public partial class MainWindow
             CaptureSmokeImage(Path.Combine(outputDirectory, "CM-AnrufMonitor-widget-demo.png"));
         }
         return checks;
+    }
+
+    private async Task RunNameLookupSmokeAsync(List<string> checks)
+    {
+        if (!_smokeMode || _reverseStore is null) throw new InvalidOperationException("Internet-name smoke checks require isolated storage.");
+        DateTime local = DateTime.Now;
+        const string repeatedNumber = "+493012345678";
+        const string manualNumber = "+493098760000";
+        const string internetName = "DEMO · Sanitärbetrieb Nord";
+        const string ownName = "DEMO · Eigener Kontakt";
+        DateTimeOffset utc = DateTimeOffset.UtcNow;
+        _reverseStore.Save(new[]
+        {
+            new ReverseLookupResult
+            {
+                Status = ReverseLookupStatus.Found, NormalizedNumber = manualNumber, Name = "DEMO · Nachrangiger Internetname",
+                Provider = InternetNameProvider, CheckedAtUtc = utc, ExpiresAtUtc = utc.AddDays(30)
+            }
+        });
+        ReloadInternetNames();
+        _contacts.Add(new Contact(ownName, manualNumber));
+        _contactsDirty = true;
+        var syntheticCalls = new[]
+        {
+            new CallRecord { Id = "smoke-history-a", StartedAt = local.AddMinutes(-3), ConnectedAt = local.AddMinutes(-3).AddSeconds(5), EndedAt = local.AddMinutes(-2), RemoteNumber = "030 12345678", LocalNumber = "030 99990000", Direction = CallDirection.Incoming, State = CallState.Answered, DurationSeconds = 55 },
+            new CallRecord { Id = "smoke-history-b", StartedAt = local.AddMinutes(-5), EndedAt = local.AddMinutes(-4), RemoteNumber = repeatedNumber, LocalNumber = "030 99990000", Direction = CallDirection.Incoming, State = CallState.Missed },
+            new CallRecord { Id = "smoke-history-c", StartedAt = local.AddMinutes(-8), ConnectedAt = local.AddMinutes(-8).AddSeconds(10), EndedAt = local.AddMinutes(-6), RemoteNumber = manualNumber, LocalNumber = "030 99990000", Direction = CallDirection.Outgoing, State = CallState.Answered, DurationSeconds = 110 }
+        };
+        // These records exist only in the private smoke-test profile. The production profile is never opened here.
+        _tracker.LoadHistory(syntheticCalls);
+        _historyDirty = true;
+        _demoStarted = null;
+        _smokeHistoryDemo = true;
+        BrandSubtitle.Text = "DEMO · Synthetische Anrufe, keine echten Telefonate";
+        FooterStatus.Text = "DEMO · Namenssuche mit lokalem Testanbieter · Keine Internetverbindung";
+        RefreshContacts();
+        SearchBox.Text = "Eigener Kontakt";
+        var fake = new SmokeNameProvider(repeatedNumber, internetName);
+        await LookupAllHistoryAsync(fake);
+        if (fake.Requested.Count != 1 || fake.Requested[0] != repeatedNumber)
+            throw new InvalidOperationException("Whole-history lookup ignored hidden rows, repeated a number, or queried the named contact.");
+        SearchBox.Clear();
+        RefreshHistory();
+        if (_rows.Count != 3 || _rows.Count(row => row.Name == internetName) != 2)
+            throw new InvalidOperationException("The Internet name did not update both matching history rows.");
+        if (_rows.Single(row => row.Call.Id == "smoke-history-c").Name != ownName)
+            throw new InvalidOperationException("The cached Internet name overrode a manual contact.");
+        if (!_rows.Where(row => row.Name == internetName).All(row => row.NameSource.StartsWith("Internet · Das Örtliche", StringComparison.Ordinal)))
+            throw new InvalidOperationException("Internet name provenance was not displayed.");
+        if (!new ReverseLookupStore(_dataDirectory).Load().Any(result => result.NormalizedNumber == repeatedNumber && result.Status == ReverseLookupStatus.Found && result.Name == internetName))
+            throw new InvalidOperationException("The found name was not persisted in the isolated cache.");
+        _internetNames.Clear();
+        ReloadInternetNames();
+        RefreshHistory();
+        if (_rows.Count(row => row.Name == internetName) != 2 || _rows.Single(row => row.Call.Id == "smoke-history-c").Name != ownName)
+            throw new InvalidOperationException("Reloading persisted names changed row matching or contact priority.");
+        var future = new CallRecord { RemoteNumber = repeatedNumber };
+        if (DisplayName(future) != internetName) throw new InvalidOperationException("A later call did not use the cached name.");
+        SearchBox.Text = "Sanitärbetrieb";
+        if (_rows.Count != 2) throw new InvalidOperationException("Searching by the found name did not match both rows.");
+        SearchBox.Clear();
+        _selectedCallId = "smoke-history-a";
+        RefreshHistory();
+        if (HeroName.Text != internetName || CompactName.Text != internetName)
+            throw new InvalidOperationException("The main call card or widget did not use the cached name.");
+        checks.Add("Explicit whole-history name lookup ignores view filter and deduplicates numbers");
+        checks.Add("Both matching rows, later calls, name search, call card, and widget use cached name");
+        checks.Add("Internet provenance, persistence, and manual-contact priority verified with a local fake provider");
+    }
+
+    private sealed class SmokeNameProvider(string expectedNumber, string name) : IReverseLookupProvider
+    {
+        public string Id => InternetNameProvider;
+        public List<string> Requested { get; } = new();
+        public bool SupportsNumber(string number) => number.StartsWith("+49", StringComparison.Ordinal);
+        public Task<ReverseLookupResult> LookupAsync(string number, CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            Requested.Add(number);
+            if (number != expectedNumber) throw new InvalidOperationException("Unexpected synthetic lookup number.");
+            return Task.FromResult(new ReverseLookupResult { Status = ReverseLookupStatus.Found, NormalizedNumber = number, Provider = Id, Name = name });
+        }
     }
 
     private void CaptureSmokeImage(string path)

@@ -77,11 +77,12 @@ public partial class MainWindow : Window
         HistoryGrid.ItemsSource = _rows;
         ContactsGrid.ItemsSource = _contactRows;
         LoadSettingsControls();
-        StorageInfo.Text = "Einstellungen, Kontakte und bis zu 2.000 Anrufe werden lokal gespeichert. Zugangsdaten liegen Windows-geschützt in Credentials.bin. Der automatische Abgleich kommuniziert nur mit deiner FRITZ!Box. Eine Rückwärtssuche übermittelt die ausgewählte Nummer erst bei einem ausdrücklichen Klick an Das Örtliche.\n\nDatenordner: " + _dataDirectory;
+        StorageInfo.Text = "Einstellungen, Kontakte, Internetnamen und bis zu 2.000 Anrufe werden lokal gespeichert. Zugangsdaten liegen Windows-geschützt in Credentials.bin. Der automatische Abgleich kommuniziert nur mit deiner FRITZ!Box. Die Namenssuche für den Verlauf oder eine einzelne Nummer wird ausschließlich per Klick gestartet und übermittelt die betreffenden unbekannten Rufnummern einzeln an Das Örtliche.\n\nDatenordner: " + _dataDirectory;
         _clock.Tick += Clock_Tick;
         _saveTimer.Tick += (_, _) => { _saveTimer.Stop(); SavePending(); };
         _ready = true;
         InitializeFritzSync();
+        InitializeNameLookup();
         RestoreWindow();
         RefreshContacts();
         RefreshHistory();
@@ -171,6 +172,7 @@ public partial class MainWindow : Window
 
     private void Window_Closing(object? sender, CancelEventArgs e)
     {
+        if (DeferExitForNameLookup(e)) return;
         if (!_exitRequested && _tray is not null)
         {
             e.Cancel = true;
@@ -291,7 +293,7 @@ public partial class MainWindow : Window
             return;
         }
         bool regionChanged = country != _settings.CountryCode || area != _settings.AreaCode;
-        if (regionChanged) CancelRouterOperation();
+        if (regionChanged) { CancelRouterOperation(); CancelNameLookup(contextChanged: true); }
         _settings.StartWithWindows = startWithWindows;
         _settings.CountryCode = country;
         _settings.AreaCode = area;
@@ -432,7 +434,7 @@ public partial class MainWindow : Window
         CompactConnection.Text = "● " + title;
         CompactConnection.Foreground = color;
         ConnectionDetail.Text = state == MonitorConnectionState.Reconnecting && _lastConnectionError.Length > 0 ? _lastConnectionError + "\n" + detail : detail;
-        FooterStatus.Text = state == MonitorConnectionState.Connected ? "Live-Verbindung aktiv · Anrufdaten bleiben auf diesem PC" : detail;
+        FooterStatus.Text = state == MonitorConnectionState.Connected ? "Live-Verbindung aktiv · Verlauf wird lokal gespeichert" : detail;
         if (_tray is not null) _tray.Text = ("CM AnrufMonitor · " + title)[..Math.Min(63, ("CM AnrufMonitor · " + title).Length)];
         UpdateHero();
     }
@@ -458,11 +460,16 @@ public partial class MainWindow : Window
 
     private void Clock_Tick(object? sender, EventArgs e)
     {
+        if (_nextInternetReviewTime.HasValue && _nextInternetReviewTime.Value <= DateTimeOffset.UtcNow)
+        {
+            UpdateInternetCacheInfo();
+            RefreshHistory();
+        }
         CompactTime.Text = DateTime.Now.ToString("HH:mm", CultureInfo.CurrentCulture);
         if (_demoStarted.HasValue && DateTime.Now - _demoStarted.Value > TimeSpan.FromSeconds(16))
         {
             _demoStarted = null;
-            FooterStatus.Text = _connectionState == MonitorConnectionState.Connected ? "Live-Verbindung aktiv · Anrufdaten bleiben auf diesem PC" : "Demo beendet · Noch nicht verbunden";
+            FooterStatus.Text = _connectionState == MonitorConnectionState.Connected ? "Live-Verbindung aktiv · Verlauf wird lokal gespeichert" : "Demo beendet · Noch nicht verbunden";
         }
         if (_lastRefreshDate != DateTime.Today)
         {
@@ -506,7 +513,7 @@ public partial class MainWindow : Window
             3 => visible.Where(call => call.Direction == CallDirection.Outgoing),
             _ => visible
         };
-        IEnumerable<CallRow> mapped = visible.OrderByDescending(call => call.StartedAt).Select(call => new CallRow(call, DisplayName(call)));
+        IEnumerable<CallRow> mapped = visible.OrderByDescending(call => call.StartedAt).Select(call => new CallRow(call, DisplayName(call), NameSource(call)));
         if (search.Length > 0)
             mapped = mapped.Where(row => row.Name.Contains(search, StringComparison.CurrentCultureIgnoreCase) || row.Number.Contains(search, StringComparison.OrdinalIgnoreCase) || row.LocalNumber.Contains(search, StringComparison.OrdinalIgnoreCase));
         _refreshingRows = true;
@@ -547,6 +554,8 @@ public partial class MainWindow : Window
             HeroState.Text = connected ? "LIVE-ANZEIGE AKTIV" : "BEREIT FÜR DEN ERSTEN ANRUF";
             HeroState.Foreground = BrushOf("#FFE23A");
             HeroName.Text = connected ? "Wartet auf Anrufe" : "Verbinde deine FRITZ!Box";
+            HeroName.ToolTip = null;
+            CompactName.ToolTip = null;
             HeroNumber.Text = connected ? "Der nächste Anruf erscheint hier automatisch." : "Anrufmonitor am Telefon mit #96*5* einschalten.";
             HeroDetails.Text = connected ? "Das Fenster kann als kompaktes Widget auf dem Desktop bleiben." : "Anschließend unter Einrichtung auf „Verbinden“ klicken.";
             HeroDuration.Text = "";
@@ -561,13 +570,15 @@ public partial class MainWindow : Window
             return;
         }
         string state = StateLabel(call.State);
-        string prefix = demo ? "DEMO · " : call.IsActive ? "" : selected is not null ? "AUSGEWÄHLT · " : "LETZTER ANRUF · ";
+        string prefix = demo ? "DEMO · " : _smokeMode && _smokeHistoryDemo ? "DEMO-DATEN · " : call.IsActive ? "" : selected is not null ? "AUSGEWÄHLT · " : "LETZTER ANRUF · ";
         HeroState.Text = prefix + state.ToUpperInvariant();
         HeroState.Foreground = StateColor(call.State);
         HeroName.Text = demo ? "Max Mustermann · Demo" : DisplayName(call);
+        HeroName.ToolTip = NameSource(call);
         HeroNumber.Text = DisplayNumber(call.RemoteNumber);
         string ownNumber = string.IsNullOrWhiteSpace(call.LocalNumber) ? "Eigene Nummer unbekannt" : "Eigene Nummer: " + call.LocalNumber;
         HeroDetails.Text = demo ? "Simulation. Es wird kein Anruf getätigt und nichts gespeichert." : DirectionLabel(call.Direction) + " · " + call.StartedAt.ToString("dd.MM.yyyy HH:mm:ss", CultureInfo.CurrentCulture) + " · " + ownNumber;
+        if (!demo && InternetName(call) is not null && PreferredName(call) is null) HeroDetails.Text += " · " + NameSource(call);
         HeroDuration.Text = call.State == CallState.Connected && call.ConnectedAt.HasValue ? FormatDuration(Math.Max(0, (int)(DateTime.Now - call.ConnectedAt.Value).TotalSeconds)) : call.State is CallState.Ringing or CallState.Dialing ? "" : call.ConnectedAt.HasValue || call.DurationSeconds > 0 ? FormatDuration(call.DurationSeconds) : "";
         ActiveCountText.Text = active.Length > 1 ? active.Length + " aktive Gespräche" : "";
         bool canCopy = !string.IsNullOrWhiteSpace(call.RemoteNumber);
@@ -578,11 +589,15 @@ public partial class MainWindow : Window
         CompactState.Text = HeroState.Text;
         CompactState.Foreground = HeroState.Foreground;
         CompactName.Text = HeroName.Text;
+        CompactName.ToolTip = HeroName.ToolTip;
         CompactNumber.Text = HeroNumber.Text;
         CompactDuration.Text = HeroDuration.Text;
     }
 
     private string DisplayName(CallRecord call)
+        => PreferredName(call) ?? InternetName(call)?.Name ?? (string.IsNullOrWhiteSpace(call.RemoteNumber) ? "Rufnummer unbekannt" : "Unbekannter Kontakt");
+
+    private string? PreferredName(CallRecord call)
     {
         if (call.IsDemo) return "Max Mustermann · Demo";
         string key = ContactBook.NormalizeNumber(call.RemoteNumber, _settings.CountryCode, _settings.AreaCode);
@@ -591,7 +606,7 @@ public partial class MainWindow : Window
         if (_verifiedRouterIdentity.Length > 0 && call.RouterIdentity == _verifiedRouterIdentity) _routerContactLookup.TryGetValue(key, out name);
         if (name is not null) return name;
         if (!string.IsNullOrWhiteSpace(call.RouterName)) return call.RouterName;
-        return string.IsNullOrWhiteSpace(call.RemoteNumber) ? "Rufnummer unbekannt" : "Unbekannter Kontakt";
+        return null;
     }
 
     private static string DisplayNumber(string? number) => string.IsNullOrWhiteSpace(number) ? "Unterdrückt oder nicht übermittelt" : number;
@@ -608,7 +623,7 @@ public partial class MainWindow : Window
     {
         if (HistoryGrid.SelectedItem is not CallRow row) return;
         CallRecord call = row.Call;
-        string details = row.Name + "\n" + row.Number + "\n\n" + DirectionLabel(call.Direction) + " · " + StateLabel(call.State) +
+        string details = row.Name + "\n" + row.Number + "\nQuelle des Namens: " + row.NameSource + "\n\n" + DirectionLabel(call.Direction) + " · " + StateLabel(call.State) +
             "\nBeginn: " + call.StartedAt.ToString("dd.MM.yyyy HH:mm:ss") +
             (call.ConnectedAt.HasValue ? "\nAngenommen: " + call.ConnectedAt.Value.ToString("dd.MM.yyyy HH:mm:ss") : "") +
             (call.EndedAt.HasValue ? "\nEnde: " + call.EndedAt.Value.ToString("dd.MM.yyyy HH:mm:ss") : "") +
@@ -633,6 +648,7 @@ public partial class MainWindow : Window
         if (_tracker.Snapshot().Count == 0) return;
         if (_writeBlocked.Contains("history")) { ShowWarning("Der Verlauf ist wegen eines Lesefehlers gesperrt. Bitte den Datenordner prüfen und die App neu starten."); return; }
         if (MessageBox.Show(this, "Den gesamten lokal gespeicherten Anrufverlauf löschen? Laufende Gespräche bleiben erhalten. Die Anrufliste in der FRITZ!Box wird nicht verändert.\n\nBei aktiviertem Listenabgleich lädt der nächste Abgleich die vorhandenen FRITZ!Box-Einträge erneut.", "Anrufverlauf leeren", MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) != MessageBoxResult.Yes) return;
+        CancelNameLookup(contextChanged: true);
         _tracker.ClearHistory();
         _selectedCallId = null;
         _historyDirty = true;
@@ -649,11 +665,11 @@ public partial class MainWindow : Window
         {
             using var writer = new StreamWriter(dialog.FileName, false, new UTF8Encoding(true));
             writer.NewLine = "\r\n";
-            writer.WriteLine("Beginn;Richtung;Status;Name;Rufnummer;Eigene Nummer;Dauer Sekunden;Dauerart;Ende");
+            writer.WriteLine("Beginn;Richtung;Status;Name;Namensquelle;Rufnummer;Eigene Nummer;Dauer Sekunden;Dauerart;Ende");
             foreach (CallRow row in _rows)
             {
                 CallRecord call = row.Call;
-                writer.WriteLine(string.Join(";", new[] { call.StartedAt.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture), DirectionLabel(call.Direction), StateLabel(call.State), row.Name, call.RemoteNumber, call.LocalNumber, call.DurationSeconds.ToString(CultureInfo.InvariantCulture), call.DurationIsApproximate ? "Auf Minuten gerundet" : "Live in Sekunden", call.EndedAt?.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture) ?? "" }.Select(SafeCsv)));
+                writer.WriteLine(string.Join(";", new[] { call.StartedAt.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture), DirectionLabel(call.Direction), StateLabel(call.State), row.Name, row.NameSource, call.RemoteNumber, call.LocalNumber, call.DurationSeconds.ToString(CultureInfo.InvariantCulture), call.DurationSeconds == 0 && call.ConnectedAt is null ? "Keine Gesprächsdauer übermittelt" : call.DurationIsApproximate ? "Auf Minuten gerundet" : "Live in Sekunden", call.EndedAt?.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture) ?? "" }.Select(SafeCsv)));
             }
             FooterStatus.Text = _rows.Count + " Anrufe exportiert: " + Path.GetFileName(dialog.FileName);
         }
@@ -882,7 +898,10 @@ public partial class MainWindow : Window
 
     private void Window_BoundsChanged(object? sender, EventArgs e)
     {
-        if (!_ready || _updatingLayout || WindowState != WindowState.Normal) return;
+        if (!_ready) return;
+        // Preserve usable history space on small screens without changing the normal view or widget.
+        HeroCard.Visibility = !_settings.CompactMode && ActualHeight is > 0 and < 660 ? Visibility.Collapsed : Visibility.Visible;
+        if (_updatingLayout || WindowState != WindowState.Normal) return;
         CaptureWindow();
         ScheduleSave();
     }
@@ -993,11 +1012,12 @@ public sealed class CallRow
 {
     public CallRecord Call { get; }
     public string Name { get; }
+    public string NameSource { get; }
     public string Number => string.IsNullOrWhiteSpace(Call.RemoteNumber) ? "Unbekannt" : Call.RemoteNumber;
     public string LocalNumber => string.IsNullOrWhiteSpace(Call.LocalNumber) ? "Unbekannt" : Call.LocalNumber;
     public string StateText => (Call.Direction == CallDirection.Incoming ? "↙ " : Call.Direction == CallDirection.Outgoing ? "↗ " : "· ") + MainWindow.StateLabel(Call.State);
     public Brush StateBrush => MainWindow.StateColor(Call.State);
     public string TimeText => Call.StartedAt.ToString("dd.MM.yy  HH:mm", CultureInfo.CurrentCulture);
     public string Duration => Call.State is CallState.Ringing or CallState.Dialing ? "" : Call.State == CallState.Connected ? "läuft" : Call.ConnectedAt.HasValue || Call.DurationSeconds > 0 ? (Call.DurationIsApproximate ? "≈ " : "") + MainWindow.FormatDuration(Call.DurationSeconds) : "";
-    public CallRow(CallRecord call, string name) { Call = call; Name = name; }
+    public CallRow(CallRecord call, string name, string nameSource = "") { Call = call; Name = name; NameSource = nameSource; }
 }
