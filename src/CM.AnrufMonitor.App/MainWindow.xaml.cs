@@ -68,6 +68,7 @@ public partial class MainWindow : Window
         _dataDirectory = dataDirectory ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "CM", "AnrufMonitor");
         _smokeMode = smokeMode;
         InitializeComponent();
+        AboutVersionText.Text = "CM AnrufMonitor · Version " + AppVersion.Display;
         _store = new AppStore(_dataDirectory);
         _settings = LoadSafely("settings", _store.LoadSettings, new AppSettings());
         _tracker.LoadHistory(LoadSafely<IReadOnlyList<CallRecord>>("history", _store.LoadHistory, Array.Empty<CallRecord>()));
@@ -515,7 +516,7 @@ public partial class MainWindow : Window
         _refreshingRows = false;
         EmptyHistory.Visibility = _rows.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
         EmptyHistoryTitle.Text = snapshot.Count == 0 ? "Hier erscheinen deine Anrufe" : "Keine passenden Anrufe";
-        EmptyHistorySubtitle.Text = snapshot.Count == 0 ? "Der Verlauf beginnt, sobald die Verbindung aktiv ist." : "Suchbegriff oder Filter anpassen.";
+        EmptyHistorySubtitle.Text = snapshot.Count == 0 ? "Anrufe erscheinen über die Live-Verbindung oder den FRITZ!Box-Abgleich." : "Suchbegriff oder Filter anpassen.";
         HistoryFooter.Text = _rows.Count + " von " + snapshot.Count + " Anrufen · Suche nach Name oder Rufnummer · Doppelklick für Details";
         UpdateHero();
     }

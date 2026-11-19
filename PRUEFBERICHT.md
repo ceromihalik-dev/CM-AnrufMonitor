@@ -1,4 +1,4 @@
-# Prüfbericht: CM AnrufMonitor 0.2.0
+# Prüfbericht: CM AnrufMonitor 0.2.1
 
 Stand: 19. November 2026. Ersteller: C. Mihalik. Die Anwendung wird als Vorabversion veröffentlicht.
 
@@ -14,7 +14,7 @@ Der GitHub-Workflow ergänzt einen echten Windows-Start der WPF-Anwendung und ei
 
 | Bestandteil | Stand |
 |---|---|
-| Anwendung | 0.2.0; Version zentral in `Directory.Build.props` |
+| Anwendung | 0.2.1; Version zentral in `Directory.Build.props` |
 | SDK | .NET 10.0.404 |
 | Zielpaket | `win-x64`, WPF, eigenständige Single-File-EXE |
 | Laufzeit | Im Paket enthalten; genaue Version in `BUILD-INFO.json` |
@@ -67,7 +67,8 @@ HTTP-Digest ist keine Transportverschlüsselung. Diese Version liest TR-064 loka
 - Automatische Routerverbindungen, Infobereich und Autostartänderungen sind für den Test ausgeschaltet.
 - Ein künstliches Kennwort wird durch Windows-DPAPI gespeichert und wieder gelesen; ein abweichender Routerzugang wird zurückgewiesen, Klartext wird nicht in der Datei gefunden.
 - Der Demo-Anruf ist ausdrücklich beschriftet und gelangt nicht in den echten Verlauf.
-- Große und kompakte Ansicht werden tatsächlich gerendert und als PNG erfasst.
+- Die Breite jeder Reiterbeschriftung wird gegen den tatsächlich benötigten WPF-Text geprüft. Die in 0.2.0 sichtbar gewordene Beschneidung durch äußere Abstände ist in 0.2.1 korrigiert.
+- Große Ansicht, Einrichtung mit den FRITZ!Box-Zugangsfeldern und kompaktes Widget werden tatsächlich gerendert und als PNG erfasst.
 - Erfolg erzeugt `smoke-result.json` mit `passed: true`; Fehler führen zu einem von null verschiedenen Prozess-Exitcode.
 
 Die Prüfung ersetzt keine interaktive Bedienung auf verschiedenen Windows-10-/11-PCs, Skalierungen oder Monitoren. Sie enthält keinen echten Routerzugang und testet weder einen Telefonanruf noch PayPal oder eine Rückwärtssuche mit persönlichen Rufnummern.

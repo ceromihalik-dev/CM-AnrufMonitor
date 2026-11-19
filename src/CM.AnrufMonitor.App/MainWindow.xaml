@@ -84,7 +84,7 @@
          </DataGrid>
          <StackPanel x:Name="EmptyHistory" VerticalAlignment="Center" HorizontalAlignment="Center" IsHitTestVisible="False" Margin="20">
           <TextBlock x:Name="EmptyHistoryTitle" Text="Hier erscheinen deine Anrufe" FontSize="19" HorizontalAlignment="Center" />
-          <TextBlock x:Name="EmptyHistorySubtitle" Text="Der Verlauf beginnt, sobald die Verbindung aktiv ist." Foreground="{StaticResource MutedBrush}" FontSize="12" HorizontalAlignment="Center" Margin="0,8,0,0" TextWrapping="Wrap" />
+          <TextBlock x:Name="EmptyHistorySubtitle" Text="Anrufe erscheinen über die Live-Verbindung oder den FRITZ!Box-Abgleich." Foreground="{StaticResource MutedBrush}" FontSize="12" HorizontalAlignment="Center" Margin="0,8,0,0" TextWrapping="Wrap" />
          </StackPanel>
         </Grid>
        </Border>
@@ -104,7 +104,7 @@
       </Grid>
      </TabItem>
      <TabItem Header="Einrichtung">
-      <ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel Margin="0,0,13,8">
+      <ScrollViewer x:Name="SetupScrollViewer" VerticalScrollBarVisibility="Auto"><StackPanel Margin="0,0,13,8">
        <Border Style="{StaticResource Card}" Margin="0,0,0,13"><StackPanel>
         <TextBlock Text="Mit der FRITZ!Box verbinden" Style="{StaticResource SectionTitle}" />
         <TextBlock Text="1  Am direkt angemeldeten Telefon #96*5* wählen.&#x0a;2  Diesen PC mit demselben Heimnetz verbinden.&#x0a;3  Adresse prüfen und auf „Verbinden“ klicken." TextWrapping="Wrap" Foreground="{StaticResource MutedBrush}" LineHeight="23" Margin="0,0,0,14" />
@@ -117,7 +117,7 @@
         <TextBlock x:Name="ConnectionDetail" Text="Noch nicht verbunden. Für die Live-Anzeige wird kein Passwort benötigt." TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource MutedBrush}" Margin="0,12,0,0" />
         <CheckBox x:Name="AutoConnectBox" Content="Beim nächsten Programmstart automatisch verbinden" />
        </StackPanel></Border>
-       <Border Style="{StaticResource Card}" Margin="0,0,0,13"><StackPanel>
+       <Border x:Name="FritzSyncCard" Style="{StaticResource Card}" Margin="0,0,0,13"><StackPanel>
         <TextBlock Text="Anrufliste und Telefonbücher abgleichen" Style="{StaticResource SectionTitle}" />
         <TextBlock Text="Lädt auch Anrufe, die bei ausgeschaltetem PC eingegangen sind. Die FRITZ!Box muss den Zugriff für Anwendungen (TR-064) erlauben; der Benutzer benötigt Telefonie-/Anruflistenrechte." TextWrapping="Wrap" Foreground="{StaticResource MutedBrush}" FontSize="12" LineHeight="20" Margin="0,0,0,7" />
         <CheckBox x:Name="FritzSyncEnabledBox" Content="Automatischen FRITZ!Box-Abgleich aktivieren" />
@@ -159,7 +159,7 @@
        <TextBlock Text="Daten und Programm" FontSize="15" FontWeight="SemiBold" Margin="0,0,0,7" />
        <TextBlock x:Name="StorageInfo" Text="Einstellungen, Kontakte und Anrufverlauf werden nur auf diesem PC gespeichert. Es werden keine Daten an externe Dienste übertragen." TextWrapping="Wrap" LineHeight="21" Foreground="{StaticResource MutedBrush}" Margin="0,0,0,12" />
        <StackPanel Orientation="Horizontal"><Button Content="Datenordner öffnen" Click="OpenDataFolder_Click" Margin="0,0,9,0" /><Button Content="Programm beenden" Click="Exit_Click" /></StackPanel>
-       <Border BorderBrush="{StaticResource LineBrush}" BorderThickness="0,1,0,0" Margin="0,20,0,0" Padding="0,16,0,0"><StackPanel><TextBlock Text="CM AnrufMonitor · Version 0.2.0" FontWeight="SemiBold" /><TextBlock Text="Ersteller: C. Mihalik · Eigenständige Anwendung für Windows 10 und 11" Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="0,5,0,0" /><TextBlock Text="FRITZ!Box ist eine Marke ihres jeweiligen Rechteinhabers. Diese App ist kein offizielles FRITZ!-Produkt." Foreground="{StaticResource MutedBrush}" FontSize="10" TextWrapping="Wrap" Margin="0,9,0,0" /></StackPanel></Border>
+       <Border BorderBrush="{StaticResource LineBrush}" BorderThickness="0,1,0,0" Margin="0,20,0,0" Padding="0,16,0,0"><StackPanel><TextBlock x:Name="AboutVersionText" Text="CM AnrufMonitor" FontWeight="SemiBold" /><TextBlock Text="Ersteller: C. Mihalik · Eigenständige Anwendung für Windows 10 und 11" Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="0,5,0,0" /><TextBlock Text="FRITZ!Box ist eine Marke ihres jeweiligen Rechteinhabers. Diese App ist kein offizielles FRITZ!-Produkt." Foreground="{StaticResource MutedBrush}" FontSize="10" TextWrapping="Wrap" Margin="0,9,0,0" /></StackPanel></Border>
       </StackPanel></ScrollViewer>
      </TabItem>
     </TabControl>

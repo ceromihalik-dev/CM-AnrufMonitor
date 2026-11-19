@@ -72,7 +72,7 @@ public partial class App : Application
             var checks = await window.RunSmokeChecksAsync(outputDirectory);
             if (_smokeBindings.HasErrors) throw new InvalidOperationException("WPF reported a binding error during the smoke test.");
             if (outputDirectory is not null)
-                File.WriteAllText(Path.Combine(outputDirectory, "smoke-result.json"), JsonSerializer.Serialize(new { passed = true, version = "0.2.0", checks }, new JsonSerializerOptions { WriteIndented = true }));
+                File.WriteAllText(Path.Combine(outputDirectory, "smoke-result.json"), JsonSerializer.Serialize(new { passed = true, version = AppVersion.Display, checks }, new JsonSerializerOptions { WriteIndented = true }));
             Console.WriteLine("SMOKE PASS: WPF loaded, gradient and layouts rendered, demo isolated, DPAPI round trip verified.");
             window.AllowSessionExit();
             window.Close();

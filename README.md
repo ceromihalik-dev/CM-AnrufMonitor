@@ -1,4 +1,4 @@
-# CM AnrufMonitor 0.2.0
+# CM AnrufMonitor 0.2.1
 
 Ein Windows-Desktopfenster für Anrufe an deiner FRITZ!Box, mit kompakter Widget-Ansicht, automatischem Anruflistenabgleich und Kontaktnamen. Ersteller: **C. Mihalik**.
 
@@ -97,7 +97,7 @@ dotnet run --project tests/HistorySyncChecks/HistorySyncChecks.csproj -c Release
 dotnet run --project tests/Tr064Checks/Tr064Checks.csproj -c Release
 ```
 
-Der Windows-Smoke-Test öffnet ein echtes WPF-Fenster mit eindeutig markierten Demo-Daten, prüft DPAPI und rendert beide Ansichten. Er verwendet einen isolierten temporären Datenordner, verbindet sich nicht mit einem Router und verändert keinen Autostart. `smoke-result.json` und die PNGs dokumentieren diesen begrenzten Test, keinen echten Telefonanruf.
+Der Windows-Smoke-Test öffnet ein echtes WPF-Fenster mit eindeutig markierten Demo-Daten, prüft DPAPI und vollständig sichtbare Reiterbeschriftungen und rendert Vollansicht, Einrichtung und Widget. Er verwendet einen isolierten temporären Datenordner, verbindet sich nicht mit einem Router und verändert keinen Autostart. `smoke-result.json` und die PNGs dokumentieren diesen begrenzten Test, keinen echten Telefonanruf.
 
 Der GitHub-Workflow baut unter Windows, führt alle Prüfungen und den WPF-Smoke-Test aus und veröffentlicht erst danach ein als Vorabversion gekennzeichnetes ZIP mit SHA-256-Prüfsumme. Bereits vorhandene Releases einer Version werden nicht überschrieben. `BUILD-INFO.json` im ZIP nennt den verwendeten Quellcode-Commit und den tatsächlichen Prüfstand. Ein echter Praxistest an der FRITZ!Box des Anwenders bleibt erforderlich.
 

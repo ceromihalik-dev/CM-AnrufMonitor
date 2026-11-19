@@ -21,7 +21,7 @@ public partial class MainWindow
         };
         var body = new StackPanel { Margin = new Thickness(25) };
         body.Children.Add(new TextBlock { Text = "CM AnrufMonitor", FontSize = 25, FontWeight = FontWeights.SemiBold });
-        body.Children.Add(new TextBlock { Text = "Version 0.2.0 · Ersteller: C. Mihalik", Margin = new Thickness(0, 9, 0, 19) });
+        body.Children.Add(new TextBlock { Text = "Version " + AppVersion.Display + " · Ersteller: C. Mihalik", Margin = new Thickness(0, 9, 0, 19) });
         body.Children.Add(new TextBlock { Text = "Live-Anrufanzeige, Anruflistenabgleich und Kontaktnamen für deine FRITZ!Box. Eigenständige Windows-Anwendung; kein offizielles FRITZ!-Produkt.", TextWrapping = TextWrapping.Wrap, LineHeight = 21 });
         var links = new WrapPanel { Margin = new Thickness(0, 22, 0, 0) };
         var project = new Button { Content = "Projekt auf GitHub", Margin = new Thickness(0, 0, 8, 8) };

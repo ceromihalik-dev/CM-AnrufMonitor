@@ -1,6 +1,10 @@
-# CM AnrufMonitor 0.2.0
+# CM AnrufMonitor 0.2.1
 
-## Neu
+## Korrektur in 0.2.1
+
+Die Reiter der großen Ansicht werden vollständig angezeigt. Der Windows-Prüflauf erfasst zusätzlich den Einstellungsbereich mit den neuen Zugangsfeldern.
+
+## Neu seit 0.1
 
 - **Anrufe nachladen:** Die App gleicht die FRITZ!Box-Anrufliste beim Start, bei Wiederverbindung, alle fünf Minuten und kurz nach einem beobachteten Gesprächsende ab. So werden auch Anrufe aus Zeiten mit ausgeschaltetem PC sichtbar, soweit sie noch auf der Box gespeichert sind.
 - **Namen automatisch anzeigen:** FRITZ!Box-Telefonbücher werden abgerufen und lokal zwischengespeichert. Eigene Kontakte haben Vorrang. Ein Name aus der Router-Anrufliste dient als weitere Quelle.
@@ -11,7 +15,7 @@
 
 ## Installation und Update
 
-`CM-AnrufMonitor_0.2.0_Windows-x64.zip` vollständig entpacken, eine eventuell laufende alte Version beenden und `CM-AnrufMonitor.exe` aus dem neuen Ordner starten. Die .NET-Laufzeit ist enthalten. Bei aktiviertem Windows-Autostart die Einstellung aus dem neuen Programmordner erneut speichern, damit der Startpfad stimmt.
+`CM-AnrufMonitor_0.2.1_Windows-x64.zip` vollständig entpacken, eine eventuell laufende alte Version beenden und `CM-AnrufMonitor.exe` aus dem neuen Ordner starten. Die .NET-Laufzeit ist enthalten. Bei aktiviertem Windows-Autostart die Einstellung aus dem neuen Programmordner erneut speichern, damit der Startpfad stimmt.
 
 Einstellungen, Kontakte und Verlauf aus 0.1.0 bleiben im bisherigen Benutzerordner lesbar. Der neue automatische Abgleich ist zunächst ausgeschaltet und wird erst mit dem eigenen FRITZ!Box-Zugang eingerichtet. In `Anleitung.html` stehen die Schritte für die Live-Anzeige auf Port 1012 und den getrennten TR-064-Abgleich auf Port 49000.
 

@@ -1,4 +1,4 @@
-CM ANRUFMONITOR 0.2.0
+CM ANRUFMONITOR 0.2.1
 Ersteller: C. Mihalik
 Windows 10 / 11, 64-Bit
 

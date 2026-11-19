@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
@@ -40,6 +42,17 @@ public partial class MainWindow
         MainTabs.SelectedIndex = 0;
         UpdateHero();
         await Dispatcher.InvokeAsync(UpdateLayout, DispatcherPriority.Render);
+        foreach (TabItem tab in MainTabs.Items)
+        {
+            if (tab.Template.FindName("HeaderContentPresenter", tab) is not ContentPresenter header)
+                throw new InvalidOperationException("A tab header was not rendered.");
+            var text = new FormattedText(tab.Header?.ToString() ?? "", CultureInfo.CurrentUICulture, tab.FlowDirection,
+                new Typeface(tab.FontFamily, tab.FontStyle, tab.FontWeight, tab.FontStretch), tab.FontSize,
+                tab.Foreground, VisualTreeHelper.GetDpi(tab).PixelsPerDip);
+            if (header.ActualWidth + 1 < text.WidthIncludingTrailingWhitespace)
+                throw new InvalidOperationException("Tab header is clipped: " + tab.Header);
+        }
+        checks.Add("All tab headers fit their rendered content");
         if (!HeroName.Text.Contains("Demo", StringComparison.Ordinal) || _tracker.Snapshot().Count != 0)
             throw new InvalidOperationException("Demo leaked into stored history or was not labeled.");
         checks.Add("Clearly labeled demo isolated from history");
@@ -49,6 +62,20 @@ public partial class MainWindow
             Directory.CreateDirectory(outputDirectory);
             CaptureSmokeImage(Path.Combine(outputDirectory, "CM-AnrufMonitor-full-demo.png"));
         }
+        double originalHeight = Height;
+        Height = Math.Max(Height, 1000);
+        MainTabs.SelectedIndex = 2;
+        await Dispatcher.InvokeAsync(UpdateLayout, DispatcherPriority.Render);
+        FritzSyncCard.BringIntoView();
+        await Dispatcher.InvokeAsync(UpdateLayout, DispatcherPriority.Render);
+        if (!FritzSyncCard.IsVisible || FritzUsernameBox.ActualHeight < 25 || FritzPasswordBox.ActualHeight < 25)
+            throw new InvalidOperationException("FRITZ!Box setup controls did not render.");
+        checks.Add("FRITZ!Box setup form rendered");
+        if (outputDirectory is not null)
+            CaptureSmokeImage(Path.Combine(outputDirectory, "CM-AnrufMonitor-setup-demo.png"));
+        MainTabs.SelectedIndex = 0;
+        Height = originalHeight;
+        await Dispatcher.InvokeAsync(UpdateLayout, DispatcherPriority.Render);
         SetCompact(true);
         await Dispatcher.InvokeAsync(UpdateLayout, DispatcherPriority.Render);
         if (CompactContent.Visibility != Visibility.Visible || FullContent.Visibility != Visibility.Collapsed || ActualWidth < 350)
