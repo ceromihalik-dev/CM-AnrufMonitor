@@ -1,0 +1,139 @@
+CM ANRUFMONITOR 0.2.0
+Ersteller: C. Mihalik
+Windows 10 / 11, 64-Bit
+
+START
+
+1. Das gesamte ZIP-Paket in einen eigenen Ordner entpacken.
+2. CM-AnrufMonitor.exe per Doppelklick starten.
+3. Die nachfolgenden beiden Verbindungen einrichten.
+
+Die benötigte .NET-Laufzeit ist enthalten. Python, eine zusätzliche
+.NET-Installation und Administratorrechte sind im normalen Betrieb nicht nötig.
+Die ausführliche Offline-Anleitung steht in Anleitung.html.
+
+A. LIVE-ANRUFE SOFORT ANZEIGEN
+
+- An einem direkt angeschlossenen Telefon oder direkt an der FRITZ!Box
+  angemeldeten DECT-Telefon die Folge #96*5* wählen.
+- In der App unter "Einrichtung" die FRITZ!Box-Adresse eintragen,
+  meist fritz.box oder die tatsächliche lokale IP-Adresse.
+- TCP-PORT: 1012. Auf "Verbinden" klicken.
+- Mit einem Anruf vom Mobiltelefon testen.
+
+Für die Live-Anzeige ist kein FRITZ!Box-Kennwort nötig.
+Zum Abschalten des Callmonitors #96*4* am Telefon wählen.
+
+B. ÄLTERE ANRUFE UND TELEFONBÜCHER NACHLADEN
+
+In der FRITZ!Box:
+- Unter Heimnetz > Netzwerk > Netzwerkeinstellungen gegebenenfalls
+  "weitere Einstellungen" öffnen. Unter Heimnetzfreigaben
+  "Zugriff für Anwendungen zulassen" einschalten und übernehmen.
+- Unter System > FRITZ!Box-Benutzer einen Benutzer mit der Berechtigung
+  "Sprachnachrichten, Faxnachrichten, FRITZ!App Fon und Anrufliste"
+  beziehungsweise der entsprechenden Telefonie-Berechtigung verwenden.
+
+In der App unter "Einrichtung > Anrufliste und Telefonbücher abgleichen":
+1. "Automatischen FRITZ!Box-Abgleich aktivieren" einschalten.
+2. FRITZ!BOX-BENUTZER und KENNWORT eintragen.
+3. TR-064-PORT auf 49000 belassen.
+4. "FRITZ!Box-Telefonbücher zur Namenserkennung laden" nach Wunsch einschalten.
+5. "Verbindung testen" prüft den Zugang, ohne das Kennwort zu speichern.
+6. Mit "Zugang speichern" übernehmen; danach startet der aktivierte Abgleich.
+   "Jetzt abgleichen" lädt die Daten bei Bedarf erneut.
+
+Port 1012 ist für die Live-Meldungen, Port 49000 für Listen und Telefonbücher.
+Die beiden Zugänge arbeiten unabhängig.
+
+WAS AUTOMATISCH PASSIERT
+
+- Anruflistenabgleich beim Start, nach einer Live-Wiederverbindung,
+  ungefähr alle fünf Minuten und kurz nach einem Gesprächsende.
+- Anrufe bei ausgeschaltetem PC können nachgeladen werden, soweit die
+  FRITZ!Box sie noch gespeichert hat. Die App behält bis zu 2.000 Anrufe.
+- Bei eingeschalteter Telefonbuchoption werden die Telefonbücher nach jedem
+  Start neu abgefragt, danach etwa alle sechs Stunden sowie bei "Jetzt abgleichen".
+  Bis zum Abschluss kann der gespeicherte Bestand derselben überprüften Box
+  angezeigt werden.
+- Wiederholte Abrufe legen bekannte Routereinträge nicht nochmals an.
+  Live- und Routeraufzeichnungen werden nur bei eindeutiger Zuordnung vereint.
+  Unterdrückte Nummern oder mehrere ununterscheidbare Anrufe in derselben
+  Minute bleiben gegebenenfalls separat erhalten; der Abgleich weist darauf hin.
+- Das Zeichen "≈" kennzeichnet aus der Box übernommene, auf Minuten gerundete
+  Gesprächsdauern. Genaue live erfasste Sekunden bleiben erhalten.
+
+NAMENSANZEIGE UND INTERNET-SUCHE
+
+Reihenfolge: eigene Kontakte > automatisch geladene FRITZ!Box-Telefonbücher
+> Name aus der FRITZ!Box-Anrufliste. Eigene Kontakte lassen sich manuell
+anlegen oder aus XML/CSV importieren. Beispiel-Kontakte.csv zeigt das Format.
+Landes- und Ortsvorwahl unter "Einrichtung" passend einstellen.
+
+"Rückwärtssuche" öffnet Das Örtliche im Standardbrowser und übermittelt
+NUR NACH DIESEM AUSDRÜCKLICHEN KLICK die ausgewählte Rufnummer dorthin.
+Es gibt keine automatische Internetabfrage unbekannter Anrufe und keine
+automatische Übernahme von Internetnamen. Unterdrückte Nummern bleiben unbekannt.
+
+BEDIENUNG
+
+- "Widget": kleines verschiebbares Desktop-Fenster.
+- "Einrichtung": Vordergrund, Deckkraft, Benachrichtigungen und Windows-Start.
+  Über "Einstellungen speichern" übernehmen.
+- Das Fensterkreuz blendet die App in den Infobereich neben der Windows-Uhr aus.
+  Zum vollständigen Beenden dort "Beenden" oder unter Hilfe & Info
+  "Programm beenden" wählen.
+- "Leeren" löscht nur den lokalen Verlauf. Die Box-Liste bleibt bestehen und
+  erscheint beim nächsten aktivierten Abgleich erneut. Aktive Gespräche bleiben.
+- "Demo anzeigen" ruft niemanden an und speichert keinen echten Anruf.
+- Telefoniert und angenommen wird weiterhin am Telefon.
+
+KENNWORT UND DATEN
+
+Datenordner: %LOCALAPPDATA%\CM\AnrufMonitor
+
+Das Kennwort liegt in Credentials.bin mit Windows-DPAPI für dein aktuelles
+Benutzerkonto geschützt. Es ist zusätzlich an Box-Adresse, Port und Benutzer
+gebunden. Bei einem anderen PC/Windows-Konto oder geändertem Zugang kann eine
+erneute Kennworteingabe nötig sein. "Kennwort löschen" entfernt den gespeicherten
+Zugang und schaltet den automatischen Abgleich aus.
+
+Einstellungen, Anrufverlauf und Kontaktdateien sind nicht zusätzlich
+verschlüsselt. Sichere den Datenordner bei Bedarf bei beendeter App.
+
+Der Live-Dienst überträgt Rufnummern lokal ohne Anmeldung und unverschlüsselt.
+Der Listenabruf verwendet HTTP-Digest im lokalen Netz; die Inhalte sind dabei
+nicht TLS-verschlüsselt. Verwende das vertrauenswürdige Heim-/Büronetz oder ein
+passend eingerichtetes VPN. Keine Internet-Portfreigabe für die App anlegen.
+
+VERSION, QUELLCODE UND UNTERSTÜTZUNG
+
+Projekt und Build-Anleitung:
+https://github.com/ceromihalik-dev/CM-AnrufMonitor
+
+Neue Programmpakete:
+https://github.com/ceromihalik-dev/CM-AnrufMonitor/releases
+
+Der Quellcode wird über GitHub bereitgestellt. Das Windows-Paket enthält
+die Anwendung und Bedienungsdateien, keinen Ordner "Quellcode".
+"Info" zeigt Version und Ersteller. Eine Unterstützung ist freiwillig:
+https://www.paypal.com/donate/?hosted_button_id=Y39Q96VMSJWG2
+
+PRÜFSTAND UND GRENZEN
+
+Die Prüfsuiten umfassen 168 automatisierte Einzelprüfungen für Kernfunktionen,
+Live-Netzwerk, Verlaufssynchronisierung/Speicherung und TR-064. Sie arbeiten
+mit synthetischen Daten und lokalen Testgegenstellen. Für den Start der echten
+Windows-Oberfläche und den DPAPI-Schutz enthält der GitHub-Workflow zusätzliche
+Prüfungen unter Windows. Das tatsächliche Ergebnis des jeweiligen Builds steht
+im Prüfbericht und im zugehörigen Actions-Lauf im GitHub-Projekt.
+
+Ein Test mit einer echten FRITZ!Box steht noch aus. Prüfe nach der Einrichtung
+einen angenommenen, verpassten und ausgehenden Anruf sowie das Nachladen eines
+Anrufs bei geschlossener App. Ein angezeigter Name ist kein Identitätsnachweis;
+auch ein Anrufbeantworter kann ein Gespräch annehmen. Die App kann keine vom
+Router bereits gelöschten Anrufdaten rekonstruieren.
+
+Die Programmdatei ist nicht mit einem Herausgeberzertifikat signiert.
+CM AnrufMonitor ist eine unabhängige Anwendung. FRITZ! und FRITZ!Box sind
+Marken des jeweiligen Rechteinhabers.

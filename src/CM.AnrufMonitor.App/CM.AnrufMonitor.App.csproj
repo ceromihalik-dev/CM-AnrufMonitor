@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>CM-AnrufMonitor</AssemblyName>
+    <RootNamespace>CM.AnrufMonitor.App</RootNamespace>
+    <Authors>C. Mihalik</Authors>
+    <Product>CM AnrufMonitor</Product>
+    <Description>Lokaler FRITZ!Box-Anrufmonitor mit Desktop-Widget</Description>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets/app.ico</ApplicationIcon>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../CM.AnrufMonitor.Core/CM.AnrufMonitor.Core.csproj" />
+    <Resource Include="Assets/app.ico" />
+  </ItemGroup>
+</Project>

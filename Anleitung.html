@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CM AnrufMonitor | Anleitung 0.2.0</title>
+<style>
+:root{--blue:#2773cb;--deep:#104281;--yellow:#ffe23a;--ink:#163450;--muted:#5c7189;--line:#dae5f0}
+*{box-sizing:border-box}body{margin:0;background:#eef4fa;color:var(--ink);font:16px/1.65 "Segoe UI",Arial,sans-serif}
+header{background:linear-gradient(110deg,var(--blue),var(--deep));color:white;padding:48px max(6vw,24px) 44px}
+header .brand{font-weight:800;letter-spacing:.09em;font-size:13px;color:var(--yellow)}
+h1{font-size:clamp(30px,5vw,44px);letter-spacing:-.035em;margin:10px 0}header p{max-width:700px;color:#e3effe;margin:0}
+main{max-width:1000px;margin:30px auto 60px;padding:0 24px}section{padding:26px 32px;background:white;border:1px solid var(--line);border-radius:16px;margin:18px 0}
+h2{font-size:23px;line-height:1.3;margin:0 0 16px}h3{font-size:17px;margin:24px 0 8px}p{margin:10px 0}li{padding:4px 0}ol,ul{padding-left:24px}
+.badge{display:inline-block;background:#e8f1ff;color:#1659a1;border-radius:20px;padding:5px 12px;font-size:13px;font-weight:600;margin:18px 8px 0 0}
+.note{border-left:4px solid var(--yellow);background:#fffbe4;padding:14px 18px;border-radius:4px;margin:18px 0}.plain{color:var(--muted);font-size:14px}
+code{background:#eef4fb;border:1px solid #d9e6f2;border-radius:5px;padding:2px 6px;font-size:.92em;overflow-wrap:anywhere}a{color:#1464bb;text-decoration-thickness:1px;text-underline-offset:3px}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;vertical-align:top;padding:12px;border-bottom:1px solid var(--line)}th{background:#f2f7fc;font-weight:600}
+.colors{display:flex;gap:12px;flex-wrap:wrap}.color{padding:12px 16px;border-radius:8px;color:white;font-size:13px;font-weight:600}.footer{margin:28px 0;color:var(--muted);font-size:13px}
+@media(max-width:600px){header{padding:32px 22px}main{padding:0 12px}section{padding:22px 18px}table{font-size:12px}th,td{padding:8px}}
+@media print{body{background:white;font-size:11pt}header{padding:20px;background:#104281!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}main{max-width:none;margin:0;padding:0}section{border:0;border-bottom:1px solid #ddd;border-radius:0;padding:18px 0;margin:0}h2,h3{break-after:avoid}li,tr,.note{break-inside:avoid}}
+
+nav{display:flex;flex-wrap:wrap;gap:8px 18px;margin:20px 0 26px;font-size:14px}section{scroll-margin-top:20px}.table-wrap{overflow-x:auto}h3:first-child{margin-top:0}.steps strong{color:#124f91}sup a{font-size:11px;text-decoration:none}.action{display:inline-block;background:#ffe23a;color:#163450;border-radius:6px;padding:8px 14px;font-weight:700;text-decoration:none;margin:6px 8px 0 0}@media print{nav{display:none}.action{padding:0;background:none}a{color:inherit}}
+</style></head>
+<body>
+<header><div class="brand">CM · WINDOWS ANWENDUNGEN</div><h1>Deine Anrufe. Auf dem Desktop.</h1><p>Live sehen, wer anruft. Verpasste Anrufe nachladen. Namen aus deinen FRITZ!Box-Telefonbüchern erkennen. Die Anleitung zu CM AnrufMonitor 0.2.0.</p></header>
+<main>
+<span class="badge">Version 0.2.0</span><span class="badge">Windows 10 / 11 · x64</span><span class="badge">Live-Anzeige + Anruflistenabgleich</span>
+<nav aria-label="Inhalt"><a href="#start">Start</a><a href="#live">Live-Anzeige</a><a href="#abgleich">Anrufliste einrichten</a><a href="#kontakte">Namen und Rückwärtssuche</a><a href="#bedienung">Bedienung</a><a href="#probleme">Fehlerhilfe</a><a href="#daten">Daten und Kennwort</a><a href="#projekt">Projekt und Prüfstand</a></nav>
+
+<section id="start"><h2>1. Starten und die beiden Verbindungen verstehen</h2>
+<p>Entpacke das vollständige Windows-Paket in einen eigenen Ordner und starte <code>CM-AnrufMonitor.exe</code>. Die benötigte .NET-Laufzeit ist enthalten. Python, eine zusätzliche .NET-Installation und Administratorrechte sind für den normalen Betrieb nicht erforderlich.</p>
+<p>Die App verwendet zwei getrennte Zugänge zur selben FRITZ!Box. Für die vollständige Anzeige richtest du beide ein:</p>
+<div class="table-wrap"><table><thead><tr><th>Funktion</th><th>Verbindung</th><th>Einrichtung</th></tr></thead><tbody>
+<tr><td><strong>Live-Anzeige</strong><br>Klingeln, Gesprächsaufbau und Auflegen unmittelbar sehen</td><td>Callmonitor<br>TCP-Port <code>1012</code></td><td>Am angeschlossenen Telefon <code>#96*5*</code> wählen. Keine Anmeldung in der App nötig.</td></tr>
+<tr><td><strong>Anrufliste und Telefonbücher</strong><br>Ältere Anrufe nachladen und Kontaktnamen beziehen</td><td>TR-064<br>Port <code>49000</code></td><td>Anwendungszugriff der Box freigeben und einen FRITZ!Box-Benutzer mit Telefonie-/Anruflistenrechten hinterlegen.</td></tr>
+</tbody></table></div>
+<p>Die beiden Zugänge arbeiten unabhängig: Der Listenabgleich kann funktionieren, obwohl der Live-Callmonitor noch ausgeschaltet ist. Umgekehrt funktioniert die Live-Anzeige auch ohne gespeichertes Kennwort. <a href="#quellen">Technische Quellen</a></p>
+<div class="note"><strong>Für den Zugriff im eigenen Netz.</strong> PC und telefonierende FRITZ!Box müssen direkt im Heimnetz oder über ein passend eingerichtetes VPN erreichbar sein. Für diese App brauchst du keine Internet-Portfreigabe. Verwende die lokale Box-Adresse, keine öffentliche MyFRITZ!-Adresse.</div>
+</section>
+
+<section id="live"><h2>2. Live-Anzeige einschalten</h2>
+<ol class="steps">
+<li><strong>Callmonitor an der FRITZ!Box aktivieren.</strong> Wähle <code>#96*5*</code> an einem direkt angeschlossenen Telefon oder einem direkt an der Box angemeldeten DECT-Telefon. Ein direkt angemeldetes FRITZ!Fon eignet sich dafür. Nutze dafür eine direkte Verbindung zur Box; ein nur über einen DECT-Repeater angeschlossenes Telefon eignet sich dafür nicht. <sup><a href="#quelle-callmonitor">[1]</a></sup></li>
+<li><strong>In der App „Einrichtung“ öffnen.</strong> Trage unter <strong>FRITZ!BOX-ADRESSE</strong> den Hostnamen <code>fritz.box</code> oder die tatsächliche lokale IP-Adresse ein, häufig <code>192.168.178.1</code>. Das Feld enthält nur die Adresse, ohne <code>http://</code>, Port oder Pfad.</li>
+<li><strong>TCP-Port 1012 beibehalten</strong> und auf <strong>Verbinden</strong> klicken. Der Verbindungsstatus erscheint oben im Fenster.</li>
+<li><strong>Einen Testanruf machen.</strong> Rufe deinen Anschluss vom Mobiltelefon an, nimm am Telefon ab und lege wieder auf. Teste danach einen Anruf, den niemand annimmt.</li>
+<li><strong>Automatischen Start einstellen.</strong> Aktiviere bei Bedarf <strong>Beim nächsten Programmstart automatisch verbinden</strong>. Soll auch die App selbst mit Windows starten, aktiviere zusätzlich <strong>Mit Windows starten</strong>. Übernimm diese Optionen mit <strong>Einstellungen speichern</strong>.</li>
+</ol>
+<p>Die Verbindung wird bei einem Netzwerkausfall automatisch erneut versucht. Ruhe auf der Leitung ist normal; ohne Anrufe treffen keine Live-Meldungen ein.</p>
+<p>Zum Abschalten des Callmonitors wählst du am direkt verbundenen Telefon <code>#96*4*</code>. Das schaltet den Dienst für alle Programme aus, die ihn auf dieser Box verwenden.</p>
+</section>
+
+<section id="abgleich"><h2>3. Ältere Anrufe und Telefonbücher automatisch laden</h2>
+<h3>FRITZ!Box vorbereiten</h3>
+<ol class="steps">
+<li><strong>Box-Oberfläche öffnen und anmelden.</strong> Verwende im Browser die lokale Adresse deiner FRITZ!Box.</li>
+<li><strong>Anwendungszugriff erlauben.</strong> Öffne <strong>Heimnetz → Netzwerk → Netzwerkeinstellungen</strong>. Blende gegebenenfalls über <strong>weitere Einstellungen</strong> die zusätzlichen Optionen ein. Aktiviere im Abschnitt <strong>Heimnetzfreigaben</strong> die Option <strong>Zugriff für Anwendungen zulassen</strong> und übernimm die Änderung. Die Anordnung kann je nach FRITZ!OS etwas abweichen. <sup><a href="#quelle-zugriff">[2]</a></sup></li>
+<li><strong>Benutzer auswählen oder anlegen.</strong> Unter <strong>System → FRITZ!Box-Benutzer</strong> benötigt der verwendete Benutzer die Berechtigung für <strong>Sprachnachrichten, Faxnachrichten, FRITZ!App Fon und Anrufliste</strong> beziehungsweise die entsprechende Telefonie-Berechtigung. Notiere seinen Benutzernamen und verwende dessen Kennwort. Internetzugriff auf den Benutzer ist für den lokalen Abgleich nicht erforderlich. <sup><a href="#quelle-tr064">[3]</a></sup></li>
+</ol>
+<h3>Zugang in CM AnrufMonitor speichern</h3>
+<ol class="steps">
+<li>Öffne <strong>Einrichtung → Anrufliste und Telefonbücher abgleichen</strong>.</li>
+<li>Aktiviere <strong>Automatischen FRITZ!Box-Abgleich aktivieren</strong>.</li>
+<li>Fülle <strong>FRITZ!BOX-BENUTZER</strong> und <strong>KENNWORT</strong> aus. Der <strong>TR-064-PORT</strong> bleibt normalerweise auf <code>49000</code>. Die Box-Adresse stammt aus dem Adressfeld weiter oben.</li>
+<li>Lass <strong>FRITZ!Box-Telefonbücher zur Namenserkennung laden</strong> aktiviert, wenn du die Namen automatisch nutzen möchtest.</li>
+<li>Mit <strong>Verbindung testen</strong> kannst du den Zugriff auf die Anrufliste prüfen. Der Test speichert das eingetragene Kennwort nicht.</li>
+<li>Klicke auf <strong>Zugang speichern</strong>. Bei aktiviertem Abgleich wird die Liste anschließend geladen. <strong>Jetzt abgleichen</strong> stößt den Abruf später jederzeit manuell an und aktualisiert auch die eingeschalteten Telefonbücher.</li>
+</ol>
+<p>Unter den Schaltflächen stehen das Ergebnis und die Zeitpunkte des letzten erfolgreichen Listen- und Telefonbuchabrufs. Bleibt das Kennwortfeld bei einem bereits gespeicherten, unveränderten Zugang leer, verwendet die App das vorhandene Kennwort weiter.</p>
+<h3>Wann wird abgeglichen?</h3>
+<div class="table-wrap"><table><thead><tr><th>Auslöser</th><th>Verhalten</th></tr></thead><tbody>
+<tr><td>Programmstart</td><td>Bei eingeschaltetem Abgleich wird die gespeicherte Anrufliste der Box abgefragt.</td></tr>
+<tr><td>Live-Verbindung wiederhergestellt</td><td>Die App gleicht die Liste erneut ab und ergänzt verfügbare Anrufe aus der Unterbrechung.</td></tr>
+<tr><td>Laufender Betrieb</td><td>Etwa alle fünf Minuten erfolgt ein Listenabgleich.</td></tr>
+<tr><td>Gespräch beendet</td><td>Ein weiterer Abgleich wird nach ungefähr drei Sekunden angestoßen, damit die Box den abgeschlossenen Anruf bereitstellen kann.</td></tr>
+<tr><td>Jetzt abgleichen</td><td>Anrufliste und, sofern eingeschaltet, Telefonbücher werden manuell aktualisiert.</td></tr>
+</tbody></table></div>
+<div class="note"><strong>Wenn der PC ausgeschaltet war:</strong> Beim nächsten erfolgreichen Abgleich können die Anrufe aus dieser Zeit erscheinen. Dafür müssen sie noch in der FRITZ!Box-Anrufliste stehen. Die App zeigt bis zu 2.000 gespeicherte Anrufe; sie kann keine vom Router bereits gelöschten Einträge wiederherstellen.</div>
+<p>Während der Abfrage bleiben laufende Gespräche erhalten. Die App ändert bei diesen Abrufen weder die Anrufliste noch die Telefonbücher oder Einstellungen der FRITZ!Box.</p>
+</section>
+
+<section id="kontakte"><h2>4. Kontaktnamen und Rückwärtssuche</h2>
+<h3>Woher kommt der angezeigte Name?</h3>
+<ol><li><strong>Eigene Kontakte:</strong> manuell angelegte oder über XML/CSV importierte Kontakte in der App haben Vorrang.</li><li><strong>FRITZ!Box-Telefonbücher:</strong> danach verwendet die App die automatisch geladenen Telefonbücher der verbundenen Box.</li><li><strong>Name aus der Anrufliste:</strong> wenn kein passender Kontakt vorhanden ist, kann der von der FRITZ!Box mit dem Anruf gelieferte Name erscheinen.</li></ol>
+<p>Ist kein Name bekannt, bleibt die Rufnummer sichtbar. Eine unterdrückte Nummer kann nicht nachgeschlagen werden. Die Namenszuordnung bestätigt nicht, wer tatsächlich am anderen Ende spricht.</p>
+<p>Bei eingeschalteter Telefonbuchoption werden die Telefonbücher nach jedem Programmstart neu abgefragt. Nach Prüfung der Gerätekennung kann die App zunächst den bereits gespeicherten Bestand derselben Box anzeigen. Weitere Aktualisierungen erfolgen ungefähr alle sechs Stunden sowie bei <strong>Jetzt abgleichen</strong>. Scheitert nur die Telefonbuchaktualisierung, bleiben vorhandene Kontakte erhalten.</p>
+<h3>Eigene Kontakte pflegen</h3>
+<p>Unter <strong>Kontakte</strong> trägst du einen Namen und eine Nummer ein und wählst <strong>Kontakt hinzufügen</strong>. Einen Anruf kannst du auch per Rechtsklick über <strong>Als Kontakt übernehmen</strong> in die Kontaktverwaltung übernehmen.</p>
+<ul><li><strong>FRITZ!Box-Telefonbuch importieren:</strong> Wähle eine unter <strong>Telefonie → Telefonbuch → Sichern</strong> exportierte XML-Datei. Dieser manuelle Import legt eigene Kontakte an und bleibt vom automatischen Telefonbuchbestand getrennt.</li><li><strong>CSV importieren:</strong> Die beiliegende <code>Beispiel-Kontakte.csv</code> zeigt das Format <code>Name;Nummer</code>. Verwende UTF-8 und Semikolon oder Komma als Trennzeichen.</li><li><strong>Vorwahlen:</strong> Unter <strong>Einrichtung → Rufnummern richtig zuordnen</strong> steht für Deutschland <code>+49</code>. Ergänze deine Ortsvorwahl, wenn lokale Nummern ohne Vorwahl vorkommen, und wähle <strong>Einstellungen speichern</strong>.</li></ul>
+<p>Beispiel: Mit Landesvorwahl <code>+49</code> und Ortsvorwahl <code>030</code> passen <code>030 123456</code>, <code>+49 30 123456</code> und <code>123456</code> zum selben Kontakt. Ohne passende Ortsvorwahl setzt die App Nummern nicht allein wegen gleicher Endziffern gleich.</p>
+<h3>Rückwärtssuche bei Das Örtliche</h3>
+<p>Klicke beim angezeigten Anruf auf <strong>Rückwärtssuche ↗</strong> oder wähle im Verlauf per Rechtsklick <strong>Rückwärtssuche bei Das Örtliche …</strong>. Der Standardbrowser öffnet die Suche mit der ausgewählten externen Rufnummer.</p>
+<div class="note"><strong>Nur dieser ausdrückliche Klick übermittelt die Nummer an Das Örtliche.</strong> Die App fragt unbekannte Nummern nicht automatisch im Internet ab und übernimmt Suchergebnisse nicht automatisch als Kontaktnamen. Ob ein Treffer vorhanden ist, hängt vom Verzeichnis ab.</div>
+<p>Für unterdrückte Rufnummern, interne Nebenstellen und unvollständige Ortsnummern ist diese Suche nicht verfügbar. Ergänze bei Ortsnummern zuerst die passende Ortsvorwahl.</p>
+</section>
+
+<section id="bedienung"><h2>5. Desktop-Fenster und Anrufverlauf bedienen</h2>
+<p>Über <strong>Widget</strong> wird aus dem Hauptfenster eine kleine, frei verschiebbare Anzeige. Unter <strong>Einrichtung → Desktop und Benachrichtigungen</strong> kannst du <strong>Fenster immer im Vordergrund halten</strong>, Benachrichtigungen, Windows-Start und Deckkraft einstellen. Übernimm die Änderungen mit <strong>Einstellungen speichern</strong>.</p>
+<p>Das Kreuz oben rechts blendet das Fenster aus; die App läuft im Infobereich weiter. Über das Symbol neben der Windows-Uhr kannst du sie anzeigen oder beenden. Zum vollständigen Beenden gibt es außerdem <strong>Hilfe &amp; Info → Programm beenden</strong>.</p>
+<p>Im <strong>Anrufverlauf</strong> suchst du nach Name, Rufnummer oder eigener Nummer. Der Filter unterscheidet alle, verpasste, eingehende und ausgehende Anrufe. Ein Doppelklick zeigt Details. Per Rechtsklick kannst du die Nummer kopieren, die Rückwärtssuche öffnen oder einen eigenen Kontakt anlegen. <strong>CSV exportieren</strong> exportiert den angezeigten Verlauf einschließlich der Kennzeichnung genauer beziehungsweise gerundeter Dauern.</p>
+<div class="table-wrap"><table><thead><tr><th>Status</th><th>Bedeutung</th></tr></thead><tbody>
+<tr><td>Klingelt</td><td>Die FRITZ!Box meldet einen eingehenden Ruf.</td></tr>
+<tr><td>Wählt</td><td>Ein ausgehender Anruf wird aufgebaut.</td></tr>
+<tr><td>Im Gespräch</td><td>Die Box meldet die Annahme. Das kann auch ein anderes Telefon oder ein Anrufbeantworter sein.</td></tr>
+<tr><td>Angenommen</td><td>Der Anruf wurde angenommen und ist beendet. Ein bestätigtes Gespräch kann auch null Sekunden angezeigt bekommen.</td></tr>
+<tr><td>Verpasst</td><td>Ein vollständig beobachteter eingehender Ruf endete ohne Annahmemeldung oder die Routerliste meldet ihn ausdrücklich als verpasst.</td></tr>
+<tr><td>Nicht erreicht</td><td>Ein ausgehender Live-Anruf endete ohne beobachtete Annahme.</td></tr>
+<tr><td>Abgewiesen</td><td>Die Routerliste kennzeichnet den eingehenden Anruf als abgewiesen, etwa durch eine Rufsperre.</td></tr>
+<tr><td>Unvollständig / Status unbekannt</td><td>Der endgültige Verlauf ist nicht vollständig bekannt, etwa nach einem Verbindungsausfall. Verfügbare Routerdaten können diesen Status später ergänzen.</td></tr>
+</tbody></table></div>
+<h3>Warum steht vor manchen Dauern „≈“?</h3>
+<p>Die FRITZ!Box-Anrufliste liefert Dauern auf volle Minuten aufgerundet. Daher bedeutet beispielsweise <strong>≈ 01:00</strong> eine gerundete Minute und keine sekundengenaue Messung. Wenn die App das vollständige Gespräch live erfasst hat, bleibt dessen genaue Sekundendauer beim Abgleich erhalten. <sup><a href="#quelle-tr064">[3]</a></sup></p>
+<h3>Mehrere Einträge zum selben Anruf?</h3>
+<p>Wiederholte Abrufe legen bekannte Routereinträge nicht erneut an. Eine Live-Aufzeichnung und ein Routereintrag werden zusammengeführt, wenn Nummern, Richtung, Zeit und Dauer eine eindeutige Zuordnung erlauben. Bei mehreren gleichartigen Anrufen in derselben Minute oder unterdrückten Rufnummern kann diese Eindeutigkeit fehlen. Dann bleiben die Einträge getrennt und der Abgleich weist darauf hin. So wird nicht versehentlich ein tatsächlich eigenständiger Anruf entfernt.</p>
+<p>Beim Wechsel von Version 0.1 werden vorhandene Daten übernommen. Alte Live-Aufzeichnungen enthalten noch keine Gerätekennung; sie lassen sich nur anhand einer eindeutigen Übereinstimmung zuordnen.</p>
+<div class="note"><strong>„Leeren“ löscht den lokalen Verlauf.</strong> Laufende Gespräche bleiben erhalten. Die Anrufliste in der FRITZ!Box bleibt bestehen und wird beim nächsten aktivierten Abgleich erneut geladen.</div>
+<p><strong>Demo anzeigen</strong> simuliert einen Anruf für die Prüfung der Darstellung. Es wird niemand angerufen; die Demo zählt nicht als echter gespeicherter Anruf.</p>
+</section>
+
+<section id="probleme"><h2>6. Wenn etwas nicht funktioniert</h2>
+<div class="table-wrap"><table><thead><tr><th>Beobachtung</th><th>Nächster Schritt</th></tr></thead><tbody>
+<tr><td>Box-Adresse wird nicht gefunden</td><td>Die tatsächliche lokale IP-Adresse statt <code>fritz.box</code> eintragen. Heimnetz und Gastnetz prüfen.</td></tr>
+<tr><td>Live-Verbindung wird abgelehnt</td><td><code>#96*5*</code> an einem direkt verbundenen Telefon wählen und <strong>TCP-PORT 1012</strong> prüfen. Die Adresse muss zur Box gehören, über die telefoniert wird.</td></tr>
+<tr><td>Live-Anrufe funktionieren, ältere Anrufe fehlen</td><td>Den separaten Listenabgleich aktivieren. Benutzer, Kennwort, Telefonie-Berechtigung, Anwendungszugriff und <strong>TR-064-PORT 49000</strong> prüfen. Danach <strong>Verbindung testen</strong> und <strong>Jetzt abgleichen</strong>.</td></tr>
+<tr><td>Listenabgleich funktioniert, aber kein Klingeln erscheint</td><td>Den Live-Callmonitor separat einschalten und unter Einrichtung auf <strong>Verbinden</strong> klicken.</td></tr>
+<tr><td>Anmeldung abgelehnt</td><td>Den tatsächlichen FRITZ!Box-Benutzernamen und sein Kennwort prüfen. Der Benutzer braucht die Telefonie-/Anruflistenberechtigung. Nach einer Kennwortänderung erneut <strong>Zugang speichern</strong>.</td></tr>
+<tr><td>Nach Router-, Benutzer- oder Portwechsel fehlt der Zugang</td><td>Das Kennwort für den neuen Zugang erneut eingeben und speichern. Gespeicherte Zugangsdaten sind an Box-Adresse, Port und Benutzer gebunden.</td></tr>
+<tr><td>Zeitüberschreitung</td><td>Gastnetz, VPN-Routing und die gezielte Firewall-Regel für den lokalen Zugriff prüfen. Anruflistenabfragen brechen nach begrenzter Wartezeit ab; gespeicherte Daten bleiben erhalten.</td></tr>
+<tr><td>Name fehlt oder ist veraltet</td><td>Telefonbuchoption, Vorwahlen und die Namenspriorität prüfen. <strong>Jetzt abgleichen</strong> aktualisiert eingeschaltete Telefonbücher. Eigene Kontakte haben auch gegenüber einem neueren Routernamen Vorrang.</td></tr>
+<tr><td>Telefonbuchabruf schlägt fehl, Anrufliste ist aktuell</td><td>Beide Ergebnisse getrennt betrachten. Die bereits abgeglichene Anrufliste bleibt gültig; vorhandene Kontakte werden bei einem fehlgeschlagenen Telefonbuchabruf nicht geleert.</td></tr>
+<tr><td>Ein Anruf aus einer längeren Abwesenheit fehlt</td><td>In der FRITZ!Box selbst nachsehen, ob er noch gespeichert ist. Der Abgleich kann keine bereits gelöschte Routerhistorie rekonstruieren.</td></tr>
+<tr><td>App ist nach dem Schließen verschwunden</td><td>Im Infobereich neben der Windows-Uhr nachsehen, gegebenenfalls bei den ausgeblendeten Symbolen.</td></tr>
+<tr><td>Windows zeigt einen unbekannten Herausgeber</td><td>Diese Version besitzt kein Herausgeberzertifikat. Beziehe das Paket aus dem angegebenen Projekt und prüfe die zur Veröffentlichung gehörenden Angaben.</td></tr>
+</tbody></table></div>
+<p>Zum Prüfen eignen sich externe eingehende und ausgehende Testanrufe. Interne Nebenstellengespräche werden von der Schnittstelle nicht in allen Konstellationen gleichartig gemeldet. Telefonieren, Annehmen und Auflegen erfolgen weiterhin am Telefon.</p>
+</section>
+
+<section id="daten"><h2>7. Kennwort, lokale Daten und Netzwerk</h2>
+<p>Die App speichert ihre Daten unter <code>%LOCALAPPDATA%\CM\AnrufMonitor</code>. Über <strong>Hilfe &amp; Info → Datenordner öffnen</strong> gelangst du direkt dorthin.</p>
+<div class="table-wrap"><table><thead><tr><th>Datei</th><th>Inhalt und Schutz</th></tr></thead><tbody>
+<tr><td><code>settings.json</code></td><td>Einstellungen, Box-Adresse, Benutzername und erfolgreiche Abgleichzeitpunkte. Kein Klartextkennwort.</td></tr>
+<tr><td><code>history.json</code></td><td>Anrufverlauf mit Rufnummern und gegebenenfalls Namen. Nicht zusätzlich verschlüsselt.</td></tr>
+<tr><td><code>contacts.json</code></td><td>Eigene Kontakte und manuelle Importe. Nicht zusätzlich verschlüsselt.</td></tr>
+<tr><td><code>router-contacts.json</code></td><td>Automatisch geladene Routerkontakte, an die überprüfte Gerätekennung gebunden. Nicht zusätzlich verschlüsselt.</td></tr>
+<tr><td><code>Credentials.bin</code></td><td>Kennwort mit Windows-DPAPI für das aktuelle Benutzerkonto geschützt. Zusätzlich an Box-Adresse, TR-064-Port und Benutzername gebunden.</td></tr>
+</tbody></table></div>
+<p>Nach einem Wechsel des Windows-Benutzerkontos oder PCs kann eine erneute Kennworteingabe erforderlich sein. Das bloße Kopieren der Programmdatei überträgt keinen nutzbaren gespeicherten Zugang. <strong>Kennwort löschen</strong> entfernt den gespeicherten Zugang und schaltet den automatischen Listenabgleich aus; die unabhängige Live-Anzeige bleibt nutzbar.</p>
+<p>Der Callmonitor über Port 1012 überträgt Rufnummern ohne Anmeldung und unverschlüsselt im erreichbaren Netz. Der Listen- und Telefonbuchabruf verwendet in dieser Version <strong>HTTP-Digest über das lokale Netzwerk</strong>. Das Kennwort wird dabei nicht als HTTP-Klartextkennwort gesendet; die abgerufenen Inhalte sind jedoch <strong>nicht mit TLS verschlüsselt</strong>. Verwende diese Zugänge im vertrauenswürdigen Heim-/Büronetz oder über ein passend eingerichtetes VPN.</p>
+<p>Der automatische Abgleich arbeitet mit deiner FRITZ!Box. Eine gewählte Rückwärtssuche öffnet dagegen einen externen Anbieter im Browser und übermittelt ihm die ausgewählte Nummer. Auch die Projekt- und Unterstützungslinks öffnen den Browser.</p>
+<h3>Sichern, aktualisieren und entfernen</h3>
+<p>Beende die App vollständig und sichere bei Bedarf den Datenordner. Für ein Update entpackst du das neue Paket aus den <a href="https://github.com/ceromihalik-dev/CM-AnrufMonitor/releases">GitHub-Veröffentlichungen</a> und startest dessen EXE. Vorhandene Daten desselben Windows-Benutzers bleiben am bisherigen Speicherort. Wenn du den Programmordner verschiebst, speichere die gewünschte Windows-Startoption in der neuen Version erneut.</p>
+<p>Zum Entfernen zuerst <strong>Mit Windows starten</strong> ausschalten und <strong>Einstellungen speichern</strong>. Danach die App beenden und den entpackten Programmordner löschen. Wenn du auch Anrufdaten, Kontakte und gespeicherten Zugang entfernen möchtest, lösche zusätzlich den Datenordner. Den Callmonitor kannst du bei Bedarf am Telefon mit <code>#96*4*</code> deaktivieren.</p>
+</section>
+
+<section id="projekt"><h2>8. Projekt, Unterstützung und Entwicklungsstand</h2>
+<p><strong>CM AnrufMonitor 0.2.0 · Ersteller: C. Mihalik</strong></p>
+<p>Quellcode, Build-Anleitung, Versionshinweise und Prüfbericht stehen im GitHub-Projekt. Das Windows-Programmpaket enthält die startbare Anwendung und die Bedienungsdateien; der Quellcode wird über GitHub bereitgestellt.</p>
+<p><a class="action" href="https://github.com/ceromihalik-dev/CM-AnrufMonitor">Projekt auf GitHub</a><a class="action" href="https://github.com/ceromihalik-dev/CM-AnrufMonitor/releases">Versionen herunterladen</a><a class="action" href="https://www.paypal.com/donate/?hosted_button_id=Y39Q96VMSJWG2">Freiwillig unterstützen</a></p>
+<p>Die App bietet dieselben Links unter <strong>Info</strong> und <strong>Unterstützen</strong>. Eine Unterstützung über PayPal ist freiwillig.</p>
+<h3>Was wurde geprüft?</h3>
+<p>Die Prüfsuiten für diese Version umfassen <strong>168 automatisierte Einzelprüfungen</strong>: 44 für Kernfunktionen, 6 für die Live-TCP-Verbindung, 54 für Verlaufssynchronisierung und Speicherung sowie 64 für die TR-064-Anbindung. Sie verwenden synthetische Daten und lokale Testgegenstellen.</p>
+<p>Für den Start der echten Windows-Oberfläche und den Windows-DPAPI-Kennwortschutz enthält der GitHub-Workflow zusätzliche Prüfungen unter Windows. Das tatsächliche Ergebnis für einen bestimmten Build steht im zugehörigen Actions-Lauf und im <a href="https://github.com/ceromihalik-dev/CM-AnrufMonitor/blob/main/PRUEFBERICHT.md">Prüfbericht</a>.</p>
+<p><strong>Ein Test mit einer echten FRITZ!Box steht noch aus.</strong> Prüfe deshalb nach der Einrichtung einen angenommenen, einen verpassten und einen ausgehenden Anruf sowie das Nachladen eines Anrufs bei geschlossener App. Die Kompatibilität kann vom Modell, FRITZ!OS und den Telefonieeinstellungen abhängen.</p>
+<p class="plain">Die Gestaltung verwendet einen Blauverlauf, weiße Schrift, gelbe Bedienelemente und rote Hinweise. Das Widget ist ein eigenes Windows-Fenster; eine Integration in das Windows-11-Widget-Board ist nicht enthalten.</p>
+</section>
+
+<section id="quellen"><h2>9. Technische Quellen</h2><p class="plain">Diese Hersteller- und Projektdokumentationen erklären die verwendeten Schnittstellen. Zum täglichen Bedienen sind sie nicht nötig.</p>
+<ol>
+<li id="quelle-callmonitor"><a href="https://fritzconnection.readthedocs.io/en/latest/sources/call_monitoring.html">fritzconnection: Live-Callmonitor, Ereignisse und Telefoncodes</a>; ergänzend <a href="https://www.home-assistant.io/integrations/fritzbox_callmonitor/">Home Assistant: Anschluss und Voraussetzungen</a>.</li>
+<li id="quelle-zugriff"><a href="https://fritz.com/apps/knowledge-base/FRITZ-Box-7490/251_FRITZ-App-Fon-einrichten/">FRITZ!-Wissensdatenbank: Zugriff für Anwendungen im Heimnetz erlauben</a>.</li>
+<li id="quelle-tr064"><a href="https://fritz.support/resources/TR-064_First_Steps.pdf">FRITZ!: TR-064 First Steps</a> und <a href="https://fritz.support/resources/TR-064_Contact_SCPD.pdf">Telefonbücher und Anrufliste, Rechte und Datenformate</a>.</li>
+<li><a href="https://learn.microsoft.com/en-us/windows/win32/api/dpapi/nf-dpapi-cryptprotectdata">Microsoft: Windows-DPAPI und Benutzerbindung</a>.</li>
+</ol></section>
+<div class="footer">CM AnrufMonitor 0.2.0 · Ersteller: C. Mihalik · Stand: 19. November 2026<br>Unabhängige Anwendung. FRITZ! und FRITZ!Box sind Marken des jeweiligen Rechteinhabers.</div>
+</main></body></html>
