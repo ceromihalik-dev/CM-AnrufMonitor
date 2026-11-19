@@ -278,7 +278,11 @@ try
 
     store = NewStore(); path = Path.Combine(store.DirectoryPath, ReverseLookupStore.FileName);
     Directory.CreateDirectory(path);
-    Throws<IOException>(() => store.Save([Cached()]), "An unwritable target propagates storage failure");
+    bool saveFailed = false;
+    try { store.Save([Cached()]); }
+    // Replacing a directory reports IO failure on Unix and access denied on Windows.
+    catch (Exception error) when (error is IOException or UnauthorizedAccessException) { saveFailed = true; }
+    Check(saveFailed, "An unwritable target propagates storage failure");
     Check(Directory.Exists(path) && Directory.GetFiles(store.DirectoryPath, "*.tmp").Length == 0,
         "Failed atomic replacement preserves destination and removes temporary output");
 
