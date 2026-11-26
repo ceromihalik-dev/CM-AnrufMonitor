@@ -99,8 +99,14 @@ public partial class MainWindow
     private void LookupHistoryArea_SizeChanged(object sender, SizeChangedEventArgs e)
     {
         if (LookupProblemContent is null) return;
-        // The details use a bounded part of the existing history area and scroll independently.
-        LookupProblemContent.Height = Math.Clamp((e.NewSize.Height - 32) / 2, 80, 190);
+        // Reserve a whole problem row as well as its header, border and separate action row.
+        // Dividing the outer panel alone leaves too little height inside the problem grid.
+        double gridMinimum = LookupProblemsGrid.ColumnHeaderHeight + LookupProblemsGrid.RowHeight + 2;
+        double actionsHeight = Math.Max(LookupProblemActions.ActualHeight, LookupProblemBrowserButton.MinHeight);
+        double contentMinimum = gridMinimum + 2 + actionsHeight + LookupProblemActions.Margin.Top;
+        double desired = Math.Clamp((e.NewSize.Height - 40) / 2, contentMinimum, Math.Max(contentMinimum, 190));
+        double available = Math.Max(contentMinimum, e.NewSize.Height - 40 - 80);
+        LookupProblemContent.Height = Math.Min(desired, available);
     }
 
     private void NameLookupProblems_ExpandedChanged(object sender, RoutedEventArgs e)
@@ -112,8 +118,12 @@ public partial class MainWindow
     private void UpdateHistorySpace()
     {
         bool detailsOpen = NameLookupProblems.IsExpanded && NameLookupProblems.Visibility == Visibility.Visible;
-        SummaryMetrics.Visibility = !_settings.CompactMode && detailsOpen && ActualHeight is > 0 and < 660
-            ? Visibility.Collapsed : Visibility.Visible;
+        bool shortDetails = !_settings.CompactMode && detailsOpen && ActualHeight is > 0 and < 660;
+        SummaryMetrics.Visibility = shortDetails ? Visibility.Collapsed : Visibility.Visible;
+        // The disclosure is shown before every explicit run; these two explanatory lines
+        // can make room while the user inspects the results in a short window.
+        NameLookupNotice.Visibility = shortDetails ? Visibility.Collapsed : Visibility.Visible;
+        HistoryFooter.Visibility = shortDetails ? Visibility.Collapsed : Visibility.Visible;
         HeroCard.Visibility = !_settings.CompactMode && (ActualHeight is > 0 and < 660 || detailsOpen)
             ? Visibility.Collapsed : Visibility.Visible;
     }

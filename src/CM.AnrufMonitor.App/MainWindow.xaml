@@ -71,7 +71,7 @@
        </Grid>
        <StackPanel Grid.Row="1" Margin="0,0,0,10">
         <WrapPanel><Button x:Name="LookupAllNamesButton" Content="Namen für gesamte Liste suchen" Click="LookupAllNames_Click" Style="{StaticResource AccentButton}" Margin="0,0,9,5" /><Button x:Name="CancelNameLookupButton" Content="Abbrechen" Click="CancelNameLookup_Click" Margin="0,0,9,5" Visibility="Collapsed" /><TextBlock Text="Gesamter Verlauf · unabhängig vom Suchfilter" FontSize="10" Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center" Margin="0,0,0,5" /></WrapPanel>
-        <TextBlock Text="Unbekannte externe Rufnummern werden einzeln an Das Örtliche übermittelt. Vorhandene Kontaktnamen behalten Vorrang." TextWrapping="Wrap" FontSize="10" LineHeight="15" Foreground="{StaticResource MutedBrush}" />
+        <TextBlock x:Name="NameLookupNotice" Text="Unbekannte externe Rufnummern werden einzeln an Das Örtliche übermittelt. Vorhandene Kontaktnamen behalten Vorrang." TextWrapping="Wrap" FontSize="10" LineHeight="15" Foreground="{StaticResource MutedBrush}" />
         <ProgressBar x:Name="NameLookupProgress" Height="5" Minimum="0" Maximum="1" Value="0" Foreground="{StaticResource YellowBrush}" Background="#32102E5A" BorderThickness="0" Margin="0,8,0,5" Visibility="Collapsed" />
         <TextBlock x:Name="NameLookupStatus" Text="" TextWrapping="Wrap" FontSize="11" Foreground="{StaticResource MutedBrush}" Margin="0,4,0,0" Visibility="Collapsed" />
        </StackPanel>
@@ -81,7 +81,7 @@
          <Grid x:Name="LookupProblemContent" Height="160" Margin="0,6,0,4">
           <Grid.RowDefinitions><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
           <Border BorderBrush="{StaticResource LineBrush}" BorderThickness="1" CornerRadius="6" ClipToBounds="True">
-           <DataGrid x:Name="LookupProblemsGrid" SelectionChanged="LookupProblem_SelectionChanged" RowHeight="44" FontSize="11" ScrollViewer.VerticalScrollBarVisibility="Auto">
+           <DataGrid x:Name="LookupProblemsGrid" SelectionChanged="LookupProblem_SelectionChanged" RowHeight="44" ColumnHeaderHeight="34" FontSize="11" ScrollViewer.VerticalScrollBarVisibility="Auto">
             <DataGrid.Columns>
              <DataGridTextColumn Header="RUFNUMMER" Binding="{Binding Number}" Width="145" />
              <DataGridTextColumn Header="ERGEBNIS" Binding="{Binding StatusText}" Width="145" />
@@ -89,7 +89,7 @@
             </DataGrid.Columns>
            </DataGrid>
           </Border>
-          <WrapPanel Grid.Row="1" Margin="0,6,0,0">
+          <WrapPanel x:Name="LookupProblemActions" Grid.Row="1" Margin="0,6,0,0">
            <Button x:Name="LookupProblemBrowserButton" Content="Auswahl im Browser prüfen ↗" Click="LookupProblemBrowser_Click" Style="{StaticResource SmallButton}" IsEnabled="False" Margin="0,0,8,0" ToolTip="Nur beim Klick wird die ausgewählte deutsche Rufnummer an Das Örtliche im Browser übermittelt." />
            <Button x:Name="LookupProblemContactButton" Content="Kontakt ergänzen" Click="LookupProblemContact_Click" Style="{StaticResource SmallButton}" IsEnabled="False" ToolTip="Die ausgewählte Rufnummer in einen eigenen Kontakt übernehmen. Der Name wird von dir eingetragen." />
           </WrapPanel>

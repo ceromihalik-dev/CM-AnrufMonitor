@@ -76,15 +76,27 @@ public partial class MainWindow
         NameLookupProblems.IsExpanded = true;
         LookupProblemsGrid.SelectedIndex = 0;
         await Dispatcher.InvokeAsync(UpdateLayout, DispatcherPriority.Render);
-        if (SummaryMetrics.Visibility != Visibility.Collapsed || HeroCard.Visibility != Visibility.Collapsed
-            || HistoryGrid.ActualHeight < 80 || LookupProblemsGrid.ActualHeight < 60
-            || !LookupProblemBrowserButton.IsEnabled || !LookupProblemContactButton.IsEnabled)
-            throw new InvalidOperationException("Expanded problem details hide history rows or their actions at 600-pixel window height.");
-        checks.Add("Expanded problem details, explicit actions, and history rows fit at 600-pixel window height");
+        await Dispatcher.InvokeAsync(UpdateLayout, DispatcherPriority.ApplicationIdle);
         if (HistoryGrid.SelectedItem is not null) HistoryGrid.ScrollIntoView(HistoryGrid.SelectedItem);
         await Dispatcher.InvokeAsync(UpdateLayout, DispatcherPriority.Render);
         if (outputDirectory is not null)
             CaptureSmokeImage(Path.Combine(outputDirectory, "CM-AnrufMonitor-lookup-recovery-600-demo.png"));
+        if (SummaryMetrics.Visibility != Visibility.Collapsed || HeroCard.Visibility != Visibility.Collapsed
+            || HistoryGrid.ActualHeight < 80 || LookupProblemsGrid.ActualHeight < 60
+            || LookupProblemsGrid.ActualHeight + 1 < LookupProblemsGrid.ColumnHeaderHeight + LookupProblemsGrid.RowHeight
+            || !LookupProblemBrowserButton.IsEnabled || !LookupProblemContactButton.IsEnabled)
+            throw new InvalidOperationException("Expanded problem details hide history rows or their actions at 600-pixel window height. "
+                + FormattableString.Invariant($"""
+                    Window={ActualWidth:0.0}x{ActualHeight:0.0}; RequestedHeight={Height:0.0};
+                    Area={LookupHistoryArea.ActualHeight:0.0}; Content={LookupProblemContent.ActualHeight:0.0}; ContentTarget={LookupProblemContent.Height:0.0};
+                    ProblemsGrid={LookupProblemsGrid.ActualHeight:0.0}; HistoryGrid={HistoryGrid.ActualHeight:0.0};
+                    StatusHeight={NameLookupStatus.ActualHeight:0.0}; ActionsHeight={LookupProblemActions.ActualHeight:0.0};
+                    ProblemHeader={LookupProblemsGrid.ColumnHeaderHeight:0.0}; ProblemRow={LookupProblemsGrid.RowHeight:0.0};
+                    Metrics={SummaryMetrics.Visibility}; Hero={HeroCard.Visibility}; Notice={NameLookupNotice.Visibility}; Footer={HistoryFooter.Visibility};
+                    Expander={NameLookupProblems.Visibility}/{NameLookupProblems.IsExpanded};
+                    BrowserEnabled={LookupProblemBrowserButton.IsEnabled}; ContactEnabled={LookupProblemContactButton.IsEnabled}; SelectedProblem={LookupProblemsGrid.SelectedIndex}.
+                    """));
+        checks.Add("Expanded problem details, explicit actions, and history rows fit at 600-pixel window height");
         NameLookupProblems.IsExpanded = false;
         Height = Math.Max(Height, 820);
         await Dispatcher.InvokeAsync(UpdateLayout, DispatcherPriority.Render);
