@@ -67,15 +67,44 @@ public partial class MainWindow
         }
         double originalHeight = Height;
         await RunNameLookupSmokeAsync(checks);
+        await RunNameLookupRecoverySmokeAsync(checks);
         Height = 600;
         await Dispatcher.InvokeAsync(UpdateLayout, DispatcherPriority.Render);
         if (HeroCard.Visibility != Visibility.Collapsed || HistoryGrid.ActualHeight < 75)
             throw new InvalidOperationException("Name lookup controls leave no usable history area at small window height.");
         checks.Add("History remains usable at small window height");
+        NameLookupProblems.IsExpanded = true;
+        LookupProblemsGrid.SelectedIndex = 0;
+        await Dispatcher.InvokeAsync(UpdateLayout, DispatcherPriority.Render);
+        if (SummaryMetrics.Visibility != Visibility.Collapsed || HeroCard.Visibility != Visibility.Collapsed
+            || HistoryGrid.ActualHeight < 80 || LookupProblemsGrid.ActualHeight < 60
+            || !LookupProblemBrowserButton.IsEnabled || !LookupProblemContactButton.IsEnabled)
+            throw new InvalidOperationException("Expanded problem details hide history rows or their actions at 600-pixel window height.");
+        checks.Add("Expanded problem details, explicit actions, and history rows fit at 600-pixel window height");
+        if (HistoryGrid.SelectedItem is not null) HistoryGrid.ScrollIntoView(HistoryGrid.SelectedItem);
+        await Dispatcher.InvokeAsync(UpdateLayout, DispatcherPriority.Render);
+        if (outputDirectory is not null)
+            CaptureSmokeImage(Path.Combine(outputDirectory, "CM-AnrufMonitor-lookup-recovery-600-demo.png"));
+        NameLookupProblems.IsExpanded = false;
         Height = Math.Max(Height, 820);
         await Dispatcher.InvokeAsync(UpdateLayout, DispatcherPriority.Render);
         if (outputDirectory is not null)
             CaptureSmokeImage(Path.Combine(outputDirectory, "CM-AnrufMonitor-history-demo.png"));
+        NameLookupProblems.IsExpanded = true;
+        LookupProblemsGrid.SelectedIndex = 0;
+        await Dispatcher.InvokeAsync(UpdateLayout, DispatcherPriority.Render);
+        if (HeroCard.Visibility != Visibility.Collapsed || HistoryGrid.ActualHeight < 80 || LookupProblemsGrid.ActualHeight < 60)
+            throw new InvalidOperationException("Expanded lookup problems hide the history or their explanation.");
+        if (!LookupProblemBrowserButton.IsEnabled || !LookupProblemContactButton.IsEnabled)
+            throw new InvalidOperationException("The problem selection does not offer explicit browser and manual-contact actions.");
+        if (HistoryGrid.SelectedItem is not CallRow selectedRecoveryRow || selectedRecoveryRow.Name != "DEMO · Nach dem Fehler gefunden")
+            throw new InvalidOperationException("The recovery screenshot does not select the later successful call.");
+        HistoryGrid.ScrollIntoView(HistoryGrid.SelectedItem);
+        await Dispatcher.InvokeAsync(UpdateLayout, DispatcherPriority.Render);
+        checks.Add("Bounded problem details and later successful history row remain visible together");
+        if (outputDirectory is not null)
+            CaptureSmokeImage(Path.Combine(outputDirectory, "CM-AnrufMonitor-lookup-recovery-demo.png"));
+        NameLookupProblems.IsExpanded = false;
         Height = Math.Max(Height, 1000);
         MainTabs.SelectedIndex = 2;
         await Dispatcher.InvokeAsync(UpdateLayout, DispatcherPriority.Render);
@@ -180,6 +209,82 @@ public partial class MainWindow
             Requested.Add(number);
             if (number != expectedNumber) throw new InvalidOperationException("Unexpected synthetic lookup number.");
             return Task.FromResult(new ReverseLookupResult { Status = ReverseLookupStatus.Found, NormalizedNumber = number, Provider = Id, Name = name });
+        }
+    }
+
+    private async Task RunNameLookupRecoverySmokeAsync(List<string> checks)
+    {
+        if (!_smokeMode || _reverseStore is null) throw new InvalidOperationException("Recovery checks require isolated smoke storage.");
+        const string unclearNumber = "+493011119999";
+        const string foundNumber = "+493022228888";
+        const string noHitNumber = "+493033337777";
+        const string oldName = "DEMO · Vorher gespeicherter Name";
+        const string foundName = "DEMO · Nach dem Fehler gefunden";
+        DateTime local = DateTime.Now;
+        DateTimeOffset utc = DateTimeOffset.UtcNow;
+        _reverseStore.Save(_reverseStore.Load().Concat(new[]
+        {
+            new ReverseLookupResult
+            {
+                Provider = InternetNameProvider, Status = ReverseLookupStatus.Found,
+                NormalizedNumber = unclearNumber, Name = oldName,
+                CheckedAtUtc = utc.AddDays(-40), ExpiresAtUtc = utc.AddDays(-10)
+            }
+        }));
+        ReloadInternetNames();
+        _tracker.LoadHistory(_tracker.Snapshot().Concat(new[]
+        {
+            new CallRecord { Id = "smoke-recovery-unclear", StartedAt = local.AddSeconds(-10), EndedAt = local.AddSeconds(-5), RemoteNumber = unclearNumber, LocalNumber = "030 99990000", Direction = CallDirection.Incoming, State = CallState.Missed },
+            new CallRecord { Id = "smoke-recovery-found-a", StartedAt = local.AddSeconds(-20), EndedAt = local.AddSeconds(-15), RemoteNumber = foundNumber, LocalNumber = "030 99990000", Direction = CallDirection.Incoming, State = CallState.Missed },
+            new CallRecord { Id = "smoke-recovery-nohit", StartedAt = local.AddSeconds(-30), EndedAt = local.AddSeconds(-25), RemoteNumber = noHitNumber, LocalNumber = "030 99990000", Direction = CallDirection.Outgoing, State = CallState.NotAnswered },
+            new CallRecord { Id = "smoke-recovery-found-b", StartedAt = local.AddSeconds(-40), EndedAt = local.AddSeconds(-35), RemoteNumber = "030 22228888", LocalNumber = "030 99990000", Direction = CallDirection.Incoming, State = CallState.Missed }
+        }).ToArray());
+        _historyDirty = true;
+        SearchBox.Text = "Eigener Kontakt";
+        var fake = new SmokeRecoveryNameProvider(unclearNumber, foundNumber, noHitNumber, foundName);
+        await LookupAllHistoryAsync(fake);
+        if (!fake.Requested.SequenceEqual(new[] { unclearNumber, foundNumber, noHitNumber }))
+            throw new InvalidOperationException("The full-history run stopped after an unclear response or repeated an eligible number.");
+        if (!NameLookupStatus.Text.StartsWith("Abgeschlossen mit Hinweisen.", StringComparison.Ordinal)
+            || !NameLookupStatus.Text.Contains("1 Antwort nicht auswertbar", StringComparison.Ordinal)
+            || !NameLookupStatus.Text.Contains("1 bestätigter Nichttreffer", StringComparison.Ordinal)
+            || !NameLookupStatus.Text.Contains("0 Nummern noch nicht bearbeitet", StringComparison.Ordinal)
+            || NameLookupProgress.Value != NameLookupProgress.Maximum
+            || _nameLookupRunning || CancelNameLookupButton.Visibility != Visibility.Collapsed || !LookupAllNamesButton.IsEnabled)
+            throw new InvalidOperationException("Completed recovery lookup has unclear counts, remaining work, or busy state.");
+        if (_lookupProblems.Count != 1 || _lookupProblems[0].Number != unclearNumber
+            || _lookupProblems[0].Status != ReverseLookupStatus.UnrecognizedResponse
+            || !_lookupProblems[0].Reason.Contains("Synthetische Anbieterantwort", StringComparison.Ordinal))
+            throw new InvalidOperationException("The unclear number was omitted from details or mislabeled as a confirmed no-hit.");
+        _internetNames.Clear();
+        ReloadInternetNames();
+        SearchBox.Clear();
+        _selectedCallId = "smoke-recovery-found-a";
+        RefreshHistory();
+        if (_rows.Count(row => row.Name == foundName) != 2
+            || _rows.Single(row => row.Call.Id == "smoke-recovery-unclear").Name != oldName
+            || !_reverseStore.Load().Any(result => result.NormalizedNumber == noHitNumber && result.Status == ReverseLookupStatus.NotFound))
+            throw new InvalidOperationException("The later found name, retained older name, or confirmed no-hit did not survive reload.");
+        checks.Add("Unclear response is skipped and later full-history candidates still receive names");
+        checks.Add("Completed-with-notes state separates one unclear response from a confirmed no-hit and reports zero remaining");
+        checks.Add("Problem number and safe reason are visible; older cached name survives unclear response and reload");
+    }
+
+    private sealed class SmokeRecoveryNameProvider(string unclearNumber, string foundNumber, string noHitNumber, string foundName) : IReverseLookupProvider
+    {
+        public string Id => InternetNameProvider;
+        public List<string> Requested { get; } = new();
+        public bool SupportsNumber(string number) => number.StartsWith("+49", StringComparison.Ordinal);
+        public Task<ReverseLookupResult> LookupAsync(string number, CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            Requested.Add(number);
+            ReverseLookupResult result = number == unclearNumber
+                ? new() { Status = ReverseLookupStatus.UnrecognizedResponse, Message = "Synthetische Anbieterantwort konnte nicht ausgewertet werden. Kein bestätigter Nichttreffer." }
+                : number == foundNumber ? new() { Status = ReverseLookupStatus.Found, Name = foundName }
+                : number == noHitNumber ? new() { Status = ReverseLookupStatus.NotFound }
+                : throw new InvalidOperationException("Unexpected synthetic recovery number.");
+            return Task.FromResult(result with { NormalizedNumber = number, Provider = Id });
         }
     }
 

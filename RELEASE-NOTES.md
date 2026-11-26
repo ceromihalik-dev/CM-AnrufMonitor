@@ -1,30 +1,31 @@
-# CM AnrufMonitor 0.3.0
+# CM AnrufMonitor 0.3.1
 
-## Namen für die gesamte Anrufliste
+## Rückwärtssuche läuft bei einer einzelnen unklaren Antwort weiter
 
-Unter **Anrufverlauf → Namen für gesamte Liste suchen** lassen sich unbekannte deutsche Rufnummern des gesamten lokal gespeicherten Verlaufs bei Das Örtliche nachschlagen. Der aktuelle Suchtext oder Richtungsfilter begrenzt diesen Lauf nicht.
+Version 0.3.0 konnte den gesamten Suchlauf anhalten, wenn eine einzelne Antwort von Das Örtliche keiner vollständigen Rufnummer zugeordnet werden konnte. Eine solche Antwort wurde fälschlich wie eine Zugriffssperre behandelt. Dadurch blieben die nachfolgenden Nummern unbearbeitet.
 
-- **Treffer direkt im Verlauf:** Eindeutige Namen erscheinen bei allen bisherigen und späteren Anrufen derselben vollständigen Nummer sowie im Widget, in der Suche und im CSV-Export.
-- **Einmal pro Nummer:** Unterschiedliche Schreibweisen und mehrere Anrufe derselben Nummer werden zusammengefasst. Bekannte Kontakte, eigene, unterdrückte und interne Nummern werden übersprungen.
-- **Vorhandene Namen behalten Vorrang:** Eigene Kontakte, geprüfte FRITZ!Box-Telefonbücher und Namen aus der Router-Anrufliste stehen vor Internettreffern.
-- **Lokal gespeichert:** Quelle und Prüfdatum sind sichtbar. Positive Treffer werden 30 Tage wiederverwendet, eindeutige Nichttreffer sieben Tage. Ältere Namen bleiben erkennbar und werden beim nächsten manuellen Suchlauf erneut geprüft.
-- **Fortschritt und Abbruch:** Ergebnisse erscheinen während des Laufs. Abbrechen erhält bereits gespeicherte Treffer. Einzelne Nummern lassen sich über **Name suchen und übernehmen** im Kontextmenü abfragen.
-- **Kein API-Schlüssel:** Der eingebaute Anbieter verwendet die öffentliche Webseite von Das Örtliche. Es besteht keine offizielle API-Anbindung; Änderungen an der Webseite können Anpassungen der App erfordern.
+Diese Version trennt die Fälle:
 
-Die Internet-Suche startet nur auf Klick. Sie übermittelt die unbekannten Rufnummern einzeln, keine Anrufzeiten, Gesprächsdauern, Kontaktliste oder Routerkennwörter. Bei Sperren, verlangter Anmeldung oder nicht erkennbarer Antwortstruktur hält sie an. Ohne eindeutige Zuordnung wird kein neuer Name gesetzt.
+- **Einzelne nicht auswertbare Antwort:** Die betreffende Nummer wird mit einem eigenen Zähler übersprungen. Anschließend sucht die App die übrigen Nummern weiter.
+- **Kein falscher Nichttreffer:** Eine nicht auswertbare Antwort wird nicht als „kein Treffer“ gespeichert. Ein bereits bekannter Internetname bleibt erhalten.
+- **Probleme nachvollziehen:** Die aufklappbare Problemliste nennt die Rufnummer, die Kategorie und den Grund. Die Abschlussmeldung zeigt, wie viele Nummern bearbeitet wurden und wie viele noch ausstehen.
+- **Weiterhin begrenzte Anfragen:** Bei drei nicht auswertbaren Anbieterantworten ohne eine dazwischen erfolgreich ausgewertete neue Antwort hält die Suche an. Cachetreffer und vorübergehende Verbindungsfehler setzen diesen Zähler nicht zurück. Echte Zugriffssperren, erforderliche Anmeldungen und Anfragenbegrenzungen stoppen weiterhin sofort.
+- **Ergebnisse wiederverwenden:** Ein späterer manueller Suchlauf verwendet gültige gespeicherte Treffer und Nichttreffer. Der Verlauf muss dafür nicht gelöscht werden.
 
-Der automatische FRITZ!Box-Anruflistenabgleich und die Telefonbücher bleiben enthalten. So werden auch Anrufe nachgeladen, während der PC ausgeschaltet war, soweit die Box sie noch gespeichert hat. Die blaue Oberfläche mit gelben Akzenten und die kleinen Info-/Unterstützen-Schaltflächen bleiben erhalten. Ersteller: **C. Mihalik**.
+Die Prüfung der vollständigen Rufnummer bleibt bestehen. Die App übernimmt keinen Namen aus einem fremden Eintrag und erfindet bei unklaren Antworten keine Zuordnung. Die Änderung kann den Suchlauf fortsetzen, erhöht aber nicht automatisch die Zahl öffentlich verfügbarer Telefonbucheinträge.
 
-## Installation oder Update
+## Aktualisieren
 
-`CM-AnrufMonitor_0.3.0_Windows-x64.zip` vollständig entpacken, eine laufende ältere Version beenden und `CM-AnrufMonitor.exe` aus dem neuen Ordner starten. Die .NET-Laufzeit ist enthalten. Bestehende Einstellungen, Kontakte und der Verlauf bleiben im Datenordner erhalten. Bei aktiviertem Windows-Autostart die Einstellung aus dem neuen Ordner erneut speichern.
+Eine laufende ältere App vollständig beenden. `CM-AnrufMonitor_0.3.1_Windows-x64.zip` entpacken und die neue `CM-AnrufMonitor.exe` starten. Einstellungen, Kontakte, Verlauf und vorhandene Internetnamen bleiben im bisherigen Datenordner erhalten. Eine separate .NET-Installation ist nicht nötig. Bei aktiviertem Windows-Autostart die Einstellung aus dem neuen Programmordner erneut speichern.
 
-Zugangsdaten ausschließlich in der App eingeben. Die Einrichtung des lokalen FRITZ!Box-Abgleichs ist in `Anleitung.html` beschrieben. Für die Internet-Suche unter **Einrichtung** die Landesvorwahl und bei Bedarf die eigene Ortsvorwahl prüfen.
+Anschließend unter **Anrufverlauf** erneut **Namen für gesamte Liste suchen** wählen. Nur wenn eine tatsächliche Sperre oder Anfragenbegrenzung gemeldet wurde, zunächst warten. **Leeren** ist für die Fortsetzung nicht erforderlich.
 
-## Prüfstand und Grenzen
+## Prüfstand
 
-Sechs Prüfsuiten prüfen Netzwerk, Routerabgleich, Speicher, Rückwärtssuche und Antwortparser. Ein nativer Windows-Smoke-Test prüft die tatsächliche WPF-Oberfläche, DPAPI und die Anzeige erkannter Namen mit einem synthetischen Anbieter. Die PNGs im Release zeigen ausdrücklich markierte Testdaten. Der Prüfbericht beschreibt die getrennte Prüfung der aktuellen Anbieterwebseite.
+Die automatisierten Prüfungen bilden auch den gemeldeten Ablauf nach: 157 Nummern, 8 gespeicherte Ergebnisse und eine nicht auswertbare Antwort an Position 22. Zusätzlich werden spätere erfolgreiche Treffer, der Stopp bei wiederholten unklaren Antworten, erhaltene gespeicherte Namen und echte Zugriffssperren geprüft. Der native Windows-Test kontrolliert die sichtbare Problemliste und einen nachfolgenden Treffer mit synthetischen Daten.
 
-Ein Test an der tatsächlichen FRITZ!Box des Anwenders steht noch aus. Die Rückwärtssuche findet nur passende veröffentlichte deutsche Telefonbucheinträge. Angezeigte Namen bestätigen nicht die Identität des tatsächlichen Anrufers. Die EXE ist nicht mit einem Herausgeberzertifikat signiert. Es handelt sich um eine Vorabversion.
+Die aktuelle öffentliche Anbieterwebseite wurde erneut anhand veröffentlichter Geschäftsnummern geprüft. Die konkrete Antwort zu der im Nutzerscreenshot betroffenen Rufnummer liegt nicht vor; deren individueller Inhalt wird deshalb nicht als reproduziert behauptet. Der Prüfbericht und der GitHub-Prüflauf dokumentieren den tatsächlichen Stand.
+
+CM AnrufMonitor bleibt eine unabhängige Vorabversion ohne Herausgeberzertifikat. Ersteller: **C. Mihalik**.
 
 [Projekt und Anleitung](https://github.com/ceromihalik-dev/CM-AnrufMonitor) · [Build und Prüfungen](https://github.com/ceromihalik-dev/CM-AnrufMonitor/actions)

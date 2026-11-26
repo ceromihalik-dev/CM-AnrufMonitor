@@ -6,7 +6,7 @@ Die normale Testausführung arbeitet vollständig offline. Sie sendet weder Test
 dotnet run --project tests/ReverseLookupProviderChecks/ReverseLookupProviderChecks.csproj
 ```
 
-Stand 19. November 2026: 70 Prüfungen erfolgreich. Die Parser- und Transportgrenzen wurden zusätzlich unabhängig geprüft.
+Stand 26. November 2026: 75 Prüfungen im Release-Build erfolgreich. Die Parser- und Transportgrenzen wurden zusätzlich unabhängig geprüft.
 
 ## Öffentliche Quellen und beobachtete Seitenstruktur
 
@@ -31,7 +31,17 @@ Die Produktionsverbindung verwendet HTTPS, die normale Betriebssystem-Proxykonfi
 
 Eine separat abgerufene öffentliche Seite für die FRITZ-Unternehmensnummer wurde vollständig eingelesen und korrekt als `NotFound` erkannt. Eine separat abgerufene Sparkassen-Trefferliste enthielt sowohl den Unternehmensnamen als auch Namen mit dem Zusatz „SB-Filiale“. Sie wurde korrekt als `Ambiguous` behandelt. Es wurde kein gemeinsamer Namensanfang als eindeutiger Name erfunden.
 
-Der End-to-End-Versuch mit der öffentlich eingetragenen Firma „Juwelier Leicht, Juwelier im Hotel Adlon“ wurde mit dem tatsächlichen Produktionsanbieter, transparenter Programmkennung und normaler Betriebssystem-Proxykonfiguration ausgeführt. Die Antwort war **`Found` mit dem Namen „Juwelier Leicht, Juwelier im Hotel Adlon“**. Der Client folgte dabei der beobachteten erlaubten Detailweiterleitung und prüfte die vollständige Rufnummer anhand desselben `Organization`-Eintrags. Die vollständig separat gespeicherte Antwortseite ergab beim Offline-Abgleich ebenfalls `Found`.
+Am 19. November 2026 wurde der End-to-End-Versuch mit der öffentlich eingetragenen Firma „Juwelier Leicht, Juwelier im Hotel Adlon“ mit dem tatsächlichen Produktionsanbieter, transparenter Programmkennung und normaler Betriebssystem-Proxykonfiguration ausgeführt. Die Antwort war **`Found` mit dem Namen „Juwelier Leicht, Juwelier im Hotel Adlon“**. Der Client folgte dabei der beobachteten erlaubten Detailweiterleitung und prüfte die vollständige Rufnummer anhand desselben `Organization`-Eintrags. Die vollständig separat gespeicherte Antwortseite ergab beim Offline-Abgleich ebenfalls `Found`.
+
+## Korrektur für einzelne nicht auswertbare Antworten in 0.3.1
+
+Der gemeldete Abbruch in 0.3.0 verwendete genau den allgemeinen Rückgabepfad des Parsers: Eine Antwort ohne sicher zuordenbaren Namen und ohne bestätigte Fehlanzeige wurde als `Blocked` eingestuft. Das belegte keine Zugriffssperre, stoppte aber den gesamten Stapel. Welche konkrete Seite bei der betroffenen privaten Rufnummer zurückkam, lässt sich aus dieser Meldung allein nicht feststellen. Dafür wurden keine privaten Rufnummern abgefragt und keine privaten HTML-Antworten angefordert.
+
+Dieser Rückgabepfad liefert jetzt `UnrecognizedResponse`. Die App darf die Antwort weder als „kein Eintrag“ speichern noch daraus einen Namen übernehmen. Ein einzelner solcher Fall wird übersprungen. Auch eine allgemeine HTTP-404-Antwort ohne bestätigte Fehlanzeige bleibt nicht auswertbar; eine darin ausdrücklich erkannte CAPTCHA-Seite bleibt dagegen `Blocked`. HTTP 403, 429, eine erforderliche Anmeldung, unzulässige Weiterleitungen und die bestehenden Schutzgrenzen behalten ihre stoppende Behandlung.
+
+Der getrennte Stapeldienst zählt nicht auswertbare Antworten und hält standardmäßig nach drei solchen Anbieterantworten ohne dazwischenliegendes erkanntes Netzwerkergebnis an. Das verhindert, dass eine insgesamt veränderte oder unverständliche Anbieterseite für die ganze Liste erneut abgefragt wird. Einzelne Fälle bleiben ohne Cacheeintrag erneut prüfbar. Die Anbieter-Fehlermeldung enthält keine kopierten Namen, Rufnummern, URLs oder HTML-Inhalte.
+
+Am 26. November 2026 wurden die drei zuvor freigegebenen öffentlichen Unternehmensbeispiele erneut mit transparenter Programmkennung abgefragt. Die Juwelier-Detailseite lieferte weiterhin HTTP 302/200 und `Organization`-Metadaten, die FRITZ-Suche HTTP 404 mit `nonumber01` und die Sparkassen-Trefferliste HTTP 302/200 mit `hitlnk_name` und `phoneblock`. Der neu gebaute Anbieter wertete diese vollständigen aktuellen Antworten anschließend offline korrekt als `Found`, `NotFound` und `Ambiguous` aus. Es gab dabei keine beobachtete Zugriffssperre oder CAPTCHA-Seite und keinen Beleg für eine allgemeine Änderung dieser drei Antwortformate. Die neue Datei `unrecognized-response.html` ist ausdrücklich eine synthetische Regression und keine Rekonstruktion der privaten Antwort des Nutzers.
 
 Der manuelle Live-Modus ist nur für diese eine feste öffentliche Unternehmensnummer vorgesehen und wird weder vom normalen Testlauf noch von CI aufgerufen:
 
@@ -47,4 +57,4 @@ dotnet run --project tests/ReverseLookupProviderChecks/ReverseLookupProviderChec
 
 ## Grenzen
 
-Es werden nur vollständige deutsche Rufnummern unterstützt. Nicht veröffentlichte Nummern und Einträge mit Widerspruch gegen die Inverssuche liefern keinen Namen. Bei mehreren unterschiedlichen Namen, ungewohnter Seitenstruktur, CAPTCHA oder Zugriffssperre wird kein Name geraten. Ein einzelner verifizierter Internettreffer belegt außerdem keine Identität des tatsächlichen Anrufers, da eine übermittelte Rufnummer missbraucht werden kann. Internetnamen bleiben deshalb getrennt von eigenen Kontakten und dem FRITZ!Box-Telefonbuch.
+Es werden nur vollständige deutsche Rufnummern unterstützt. Nicht veröffentlichte Nummern und Einträge mit Widerspruch gegen die Inverssuche liefern keinen Namen. Bei mehreren unterschiedlichen Namen, ungewohnter Seitenstruktur, CAPTCHA oder Zugriffssperre wird kein Name geraten. Eine nicht auswertbare Antwort und eine tatsächliche Zugriffssperre sind getrennte Ergebnisse. Ein einzelner verifizierter Internettreffer belegt außerdem keine Identität des tatsächlichen Anrufers, da eine übermittelte Rufnummer missbraucht werden kann. Internetnamen bleiben deshalb getrennt von eigenen Kontakten und dem FRITZ!Box-Telefonbuch.

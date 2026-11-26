@@ -80,9 +80,9 @@ public sealed class DasOertlicheReverseLookupProvider : IReverseLookupProvider, 
             byte[] bytes = await ReadBoundedAsync(response.Content, timeout.Token).ConfigureAwait(false);
             string html = DecodeBody(bytes, response.Content.Headers.ContentType?.CharSet);
             DasOertlicheParsedResult parsed = DasOertlicheHtmlParser.Parse(html, normalizedNumber, timeout.Token);
-            if (needsVerifiedNoHit && parsed.Status != ReverseLookupStatus.NotFound)
-                return Result(ReverseLookupStatus.Blocked, normalizedNumber,
-                    "Die Suchseite von Das Örtliche ist nicht verfügbar. Es liegt kein bestätigtes Suchergebnis vor.");
+            if (needsVerifiedNoHit && parsed.Status is not (ReverseLookupStatus.NotFound or ReverseLookupStatus.Blocked))
+                return Result(ReverseLookupStatus.UnrecognizedResponse, normalizedNumber,
+                    "Die Suchantwort von Das Örtliche konnte für diese Rufnummer nicht ausgewertet werden. Es liegt kein bestätigtes Suchergebnis vor.");
             return Result(parsed.Status, normalizedNumber, parsed.Message) with
             {
                 Name = parsed.Name,

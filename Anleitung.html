@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>CM AnrufMonitor | Anleitung 0.3.0</title>
+<title>CM AnrufMonitor | Anleitung 0.3.1</title>
 <style>
 :root{--blue:#2773cb;--deep:#104281;--yellow:#ffe23a;--ink:#163450;--muted:#5c7189;--line:#dae5f0}
 *{box-sizing:border-box}body{margin:0;background:#eef4fa;color:var(--ink);font:16px/1.65 "Segoe UI",Arial,sans-serif}
@@ -22,9 +22,9 @@ table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;v
 nav{display:flex;flex-wrap:wrap;gap:8px 18px;margin:20px 0 26px;font-size:14px}section{scroll-margin-top:20px}.table-wrap{overflow-x:auto}h3:first-child{margin-top:0}.steps strong{color:#124f91}sup a{font-size:11px;text-decoration:none}.action{display:inline-block;background:#ffe23a;color:#163450;border-radius:6px;padding:8px 14px;font-weight:700;text-decoration:none;margin:6px 8px 0 0}@media print{nav{display:none}.action{padding:0;background:none}a{color:inherit}}
 </style></head>
 <body>
-<header><div class="brand">CM · WINDOWS ANWENDUNGEN</div><h1>Deine Anrufe. Auf dem Desktop.</h1><p>Live sehen, wer anruft. Verpasste Anrufe nachladen. Namen aus deinen Telefonbüchern erkennen und für die gesamte Anrufliste nachschlagen. Die Anleitung zu CM AnrufMonitor 0.3.0.</p></header>
+<header><div class="brand">CM · WINDOWS ANWENDUNGEN</div><h1>Deine Anrufe. Auf dem Desktop.</h1><p>Live sehen, wer anruft. Verpasste Anrufe nachladen. Namen aus deinen Telefonbüchern erkennen und für die gesamte Anrufliste nachschlagen. Die Anleitung zu CM AnrufMonitor 0.3.1.</p></header>
 <main>
-<span class="badge">Version 0.3.0</span><span class="badge">Windows 10 / 11 · x64</span><span class="badge">Live-Anzeige + Anruflistenabgleich</span>
+<span class="badge">Version 0.3.1</span><span class="badge">Windows 10 / 11 · x64</span><span class="badge">Live-Anzeige + Anruflistenabgleich</span>
 <nav aria-label="Inhalt"><a href="#start">Start</a><a href="#live">Live-Anzeige</a><a href="#abgleich">Anrufliste einrichten</a><a href="#kontakte">Namen und Rückwärtssuche</a><a href="#bedienung">Bedienung</a><a href="#probleme">Fehlerhilfe</a><a href="#daten">Daten und Kennwort</a><a href="#projekt">Projekt und Prüfstand</a></nav>
 
 <section id="start"><h2>1. Starten und die beiden Verbindungen verstehen</h2>
@@ -94,9 +94,11 @@ nav{display:flex;flex-wrap:wrap;gap:8px 18px;margin:20px 0 26px;font-size:14px}s
 <p>Quelle und Prüfdatum stehen im Tooltip des Namens und in den Anrufdetails. Eigene Kontakte und vorhandene FRITZ!Box-Namen behalten Vorrang. Die App rät keine Namen bei mehreren unterschiedlichen Treffern und bestätigt damit nicht die tatsächliche Identität des Anrufers.</p>
 <p>Treffer werden 30 Tage wiederverwendet, eindeutige Nichttreffer sieben Tage. Danach werden sie beim nächsten manuell gestarteten Lauf erneut geprüft. Ältere Namen bleiben mit einem Hinweis auf den älteren Prüfstand sichtbar. Vorübergehende Fehler löschen sie nicht; eine neue eindeutige Antwort ohne Treffer oder mit mehreren unterschiedlichen Namen hebt die frühere Zuordnung auf.</p>
 <p>Über <strong>Einrichtung → Gespeicherte Internetnamen → Suchergebnisse löschen</strong> leerst du nur diesen Speicher. Eigene Kontakte, Routerkontakte und der Verlauf bleiben erhalten.</p>
+<h3>Probleme und übersprungene Nummern</h3>
+<p>Unter dem Suchfortschritt lässt sich die Problemliste aufklappen. Sie nennt die betroffenen Nummern und den jeweiligen Grund. Die Abschlussmeldung zeigt außerdem, wie viele Nummern noch nicht bearbeitet wurden. Eine nicht auswertbare Antwort wird nicht als Nichttreffer gespeichert. Starte bei Bedarf später erneut <strong>Namen für gesamte Liste suchen</strong>; gültige gespeicherte Ergebnisse werden wiederverwendet. Lösche dafür nicht den Anrufverlauf.</p>
 <h3>Einzelne Nummer oder Suche im Browser</h3>
 <p>Per Rechtsklick auf einen Anruf wählst du <strong>Name suchen und übernehmen</strong>. Die zusätzliche Option <strong>Rückwärtssuche im Browser …</strong> und die Schaltfläche <strong>Rückwärtssuche ↗</strong> öffnen die ausgewählte Nummer im Standardbrowser.</p>
-<p>Es werden nur veröffentlichte deutsche Rufnummern gefunden, für die kein Widerspruch gegen die Rückwärtssuche vorliegt. Unvollständige Ortsnummern benötigen zuerst die richtige Ortsvorwahl unter Einrichtung. Bei einer Sperre, verlangter Anmeldung oder nicht erkennbarer Webseite stoppt der Lauf. Eine Änderung der Anbieterwebseite kann ein App-Update erforderlich machen.</p>
+<p>Es werden nur veröffentlichte deutsche Rufnummern gefunden, für die kein Widerspruch gegen die Rückwärtssuche vorliegt. Unvollständige Ortsnummern benötigen zuerst die richtige Ortsvorwahl unter Einrichtung. Eine einzelne nicht auswertbare Antwort wird übersprungen. Die App sucht die übrigen Nummern weiter und zählt diesen Fall getrennt von „kein Treffer“. Der bisherige Name bleibt erhalten. Nach drei solchen Anbieterantworten ohne erfolgreich ausgewertete neue Antwort dazwischen hält die Suche an; gespeicherte Ergebnisse setzen diesen Zähler nicht zurück. Bei einer tatsächlichen Sperre, Anfragenbegrenzung oder verlangten Anmeldung stoppt der Lauf sofort. Eine Änderung der Anbieterwebseite kann ein App-Update erforderlich machen.</p>
 </section>
 
 <section id="bedienung"><h2>5. Desktop-Fenster und Anrufverlauf bedienen</h2>
@@ -159,7 +161,7 @@ nav{display:flex;flex-wrap:wrap;gap:8px 18px;margin:20px 0 26px;font-size:14px}s
 </section>
 
 <section id="projekt"><h2>8. Projekt, Unterstützung und Entwicklungsstand</h2>
-<p><strong>CM AnrufMonitor 0.3.0 · Ersteller: C. Mihalik</strong></p>
+<p><strong>CM AnrufMonitor 0.3.1 · Ersteller: C. Mihalik</strong></p>
 <p>Quellcode, Build-Anleitung, Versionshinweise und Prüfbericht stehen im GitHub-Projekt. Das Windows-Programmpaket enthält die startbare Anwendung und die Bedienungsdateien; der Quellcode wird über GitHub bereitgestellt.</p>
 <p><a class="action" href="https://github.com/ceromihalik-dev/CM-AnrufMonitor">Projekt auf GitHub</a><a class="action" href="https://github.com/ceromihalik-dev/CM-AnrufMonitor/releases">Versionen herunterladen</a><a class="action" href="https://www.paypal.com/donate/?hosted_button_id=Y39Q96VMSJWG2">Freiwillig unterstützen</a></p>
 <p>Die App bietet dieselben Links unter <strong>Info</strong> und <strong>Unterstützen</strong>. Eine Unterstützung über PayPal ist freiwillig.</p>
@@ -177,5 +179,5 @@ nav{display:flex;flex-wrap:wrap;gap:8px 18px;margin:20px 0 26px;font-size:14px}s
 <li id="quelle-tr064"><a href="https://fritz.support/resources/TR-064_First_Steps.pdf">FRITZ!: TR-064 First Steps</a> und <a href="https://fritz.support/resources/TR-064_Contact_SCPD.pdf">Telefonbücher und Anrufliste, Rechte und Datenformate</a>.</li>
 <li><a href="https://learn.microsoft.com/en-us/windows/win32/api/dpapi/nf-dpapi-cryptprotectdata">Microsoft: Windows-DPAPI und Benutzerbindung</a>.</li>
 </ol></section>
-<div class="footer">CM AnrufMonitor 0.3.0 · Ersteller: C. Mihalik · Stand: 19. November 2026<br>Unabhängige Anwendung. FRITZ! und FRITZ!Box sind Marken des jeweiligen Rechteinhabers.</div>
+<div class="footer">CM AnrufMonitor 0.3.1 · Ersteller: C. Mihalik · Stand: 26. November 2026<br>Unabhängige Anwendung. FRITZ! und FRITZ!Box sind Marken des jeweiligen Rechteinhabers.</div>
 </main></body></html>

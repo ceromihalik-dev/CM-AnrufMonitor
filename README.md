@@ -1,4 +1,4 @@
-# CM AnrufMonitor 0.3.0
+# CM AnrufMonitor 0.3.1
 
 Ein Windows-Desktopfenster für Anrufe an deiner FRITZ!Box, mit kompakter Widget-Ansicht, automatischem Anruflistenabgleich und Kontaktnamen. Ersteller: **C. Mihalik**.
 
@@ -65,7 +65,9 @@ Die Internet-Rückwärtssuche ist für veröffentlichte deutsche Rufnummern geda
 
 Eine einzelne Nummer lässt sich per Rechtsklick mit **Name suchen und übernehmen** abfragen. **Rückwärtssuche im Browser …** bleibt zusätzlich verfügbar. Für den eingebauten Anbieter ist kein API-Schlüssel nötig. Die App wertet die Webseite eigenständig aus; es besteht keine offizielle API-Anbindung und keine Verbindung zum Betreiber von Das Örtliche oder jFritz. jFritz diente als Referenz für das gewünschte Verhalten, sein Programmcode wurde nicht übernommen.
 
-Die Internetsuche startet nur auf Klick. Sie übermittelt die jeweiligen unbekannten Rufnummern, keine Anrufzeiten, Gesprächsdauern, Kontaktlisten oder Routerkennwörter. Abfragen laufen nacheinander mit mindestens zwei Sekunden Abstand. Bei einer Sperre, verlangter Anmeldung oder nicht mehr erkennbarer Antwortstruktur stoppt der Lauf. Eine veränderte Anbieterwebseite kann ein App-Update erforderlich machen.
+Die Internetsuche startet nur auf Klick. Sie übermittelt die jeweiligen unbekannten Rufnummern, keine Anrufzeiten, Gesprächsdauern, Kontaktlisten oder Routerkennwörter. Abfragen laufen nacheinander mit mindestens zwei Sekunden Abstand. Eine einzelne nicht auswertbare Antwort wird getrennt als übersprungen gemeldet; der Lauf geht mit der nächsten Nummer weiter. Sie gilt nicht als „kein Treffer“, wird nicht negativ gespeichert und entfernt keinen vorhandenen Namen. Nach drei nicht auswertbaren Anbieterantworten ohne eine dazwischen erfolgreich ausgewertete neue Antwort hält die Suche an. Gespeicherte Ergebnisse setzen diesen Fehlerzähler nicht zurück. Eine tatsächliche Sperre, Anfragenbegrenzung oder verlangte Anmeldung stoppt weiterhin sofort. Eine veränderte Anbieterwebseite kann ein App-Update erforderlich machen.
+
+Unter den Suchergebnissen lassen sich **Probleme und übersprungene Nummern** aufklappen. Dort stehen die betreffende Nummer und der Grund. Die Abschlussmeldung unterscheidet bearbeitete, übersprungene und noch nicht bearbeitete Nummern. Ein erneuter manueller Suchlauf verwendet weiterhin gültige gespeicherte Treffer und Nichttreffer; der Anrufverlauf muss dafür nicht gelöscht werden.
 
 **Quelle und Prüfdatum** stehen im Tooltip des Namens und in den Anrufdetails. Positive Treffer werden 30 Tage ohne neue Anfrage wiederverwendet, eindeutige Nichttreffer sieben Tage. Ältere Namen bleiben als älterer Stand sichtbar und werden beim nächsten manuell gestarteten Suchlauf erneut geprüft. Vorübergehende Fehler löschen sie nicht; eine eindeutige neue Antwort ohne Treffer oder mit mehreren unterschiedlichen Namen hebt die frühere Zuordnung auf. Unter **Einrichtung → Gespeicherte Internetnamen → Suchergebnisse löschen** lässt sich dieser Speicher getrennt von Kontakten und Verlauf leeren.
 

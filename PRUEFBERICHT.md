@@ -1,10 +1,10 @@
-# Prüfbericht: CM AnrufMonitor 0.3.0
+# Prüfbericht: CM AnrufMonitor 0.3.1
 
-Stand: 19. November 2026. Ersteller: C. Mihalik. Die Anwendung wird als Vorabversion veröffentlicht.
+Stand: 26. November 2026. Ersteller: C. Mihalik. Die Anwendung wird als Vorabversion veröffentlicht.
 
 ## Ergebnis und Aussagekraft
 
-**308 Verhaltensprüfungen bestanden:** 44 Kernprüfungen, 6 TCP-Szenarien, 54 Prüfungen des Verlaufsabgleichs, 64 TR-064-Prüfungen, 70 Prüfungen der Stapelverarbeitung und 70 Prüfungen des Rückwärtssuche-Anbieters. Der Release-Build der WPF-Anwendung wurde mit .NET SDK 10.0.404 ohne Warnungen und Fehler für Windows kompiliert. Der GitHub-Lauf wiederholt diese Prüfungen für den veröffentlichten Quellstand.
+Alle **338 lokalen Prüfungen in sechs Prüfsuiten** wurden erfolgreich ausgeführt. Der Release-Build der WPF-Anwendung war ohne Warnungen und Fehler erfolgreich. Für 0.3.1 kommen gezielte Regressionen für einzeln nicht auswertbare Antworten, die Fortsetzung der übrigen Anrufliste und die sichtbare Problemliste hinzu. Die Ergebnisse der zusätzlichen nativen Windows-Prüfung stehen im zugehörigen GitHub-Prüflauf und in `windows-smoke.json` des Release-Pakets.
 
 Die lokalen Prüfungen verwenden ausschließlich künstliche Daten und lokale HTTP-/TCP-Server. Sie belegen Parser-, Netzwerk-, Abgleich- und Speicherverhalten. **Eine echte FRITZ!Box wurde nicht angesprochen.** Insbesondere Routermodell, FRITZ!OS, Benutzerrechte und die Telefoniekonfiguration des Anwenders sind noch praktisch zu prüfen.
 
@@ -14,7 +14,7 @@ Der GitHub-Workflow ergänzt einen echten Windows-Start der WPF-Anwendung und ei
 
 | Bestandteil | Stand |
 |---|---|
-| Anwendung | 0.3.0; Version zentral in `Directory.Build.props` |
+| Anwendung | 0.3.1; Version zentral in `Directory.Build.props` |
 | SDK | .NET 10.0.404 |
 | Zielpaket | `win-x64`, WPF, eigenständige Single-File-EXE |
 | Laufzeit | Im Paket enthalten; genaue Version in `BUILD-INFO.json` |
@@ -31,8 +31,8 @@ Der GitHub-Workflow ergänzt einen echten Windows-Start der WPF-Anwendung und ei
 | `NetworkChecks` | 6 | Echte lokale TCP-Verbindungen, fragmentierte Zeilen, mehrere Ereignisse, Stille, Wiederverbindung, Abbruch und überlange Eingaben |
 | `HistorySyncChecks` | 54 | Wiederholte Abrufe, Live-/Router-Zuordnung, ID-Wiederverwendung, laufende Gespräche, Mehrdeutigkeiten, Migration und Gerätebindung |
 | `Tr064Checks` | 64 | SOAP/XML, Digest-Anmeldung, HTTP-Fehler, Zeitgrenzen, Telefonbücher, URL-/Netzwerkgrenzen und XML-Sicherheit |
-| `ReverseLookupChecks` | 70 | Vollständiger Snapshot, eindeutige Nummern, Prioritäten, persistenter Cache, Alterung, Abbruch, Warteschlange und Stoppsignale |
-| `ReverseLookupProviderChecks` | 70 | Aktuelle Webseitenstruktur, exakte Nummernzuordnung, mehrdeutige Treffer, HTTP-Fehler, begrenzte Weiterleitungen, Antwortgröße und Abbruch |
+| `ReverseLookupChecks` | 95 | Vollständiger Snapshot, eindeutige Nummern, Prioritäten, persistenter Cache, Alterung, Fortsetzung nach unklarer Antwort, Restmengen, Warteschlange und Stoppsignale |
+| `ReverseLookupProviderChecks` | 75 | Aktuelle Webseitenstruktur, exakte Nummernzuordnung, mehrdeutige Treffer, unklare Antworten, HTTP-Fehler, begrenzte Weiterleitungen, Antwortgröße und Abbruch |
 
 ### Anruflistenabgleich
 
@@ -71,7 +71,13 @@ HTTP-Digest ist keine Transportverschlüsselung. Diese Version liest TR-064 loka
 - Speicherung erfolgt atomar in `reverse-lookup.json`. Beschädigte Originaldateien werden als `.broken` bewahrt. Falsche Anbieterkennungen und abweichende Ergebnisnummern werden abgewiesen.
 - Der Anbieter vergleicht die gesamte Rufnummer innerhalb desselben Ergebnisobjekts. Werbung, Seitentitel und die allgemeine FAQ sind keine Teilnehmernamen. Unterschiedliche Namen zur gleichen Nummer ergeben `Ambiguous`.
 - Die Anfrage verwendet einen offen erkennbaren App-User-Agent. Aktuelle Such- und Detailweiterleitungen werden nur über HTTPS zum festgelegten Anbieterhost und höchstens zwei Schritte weit verfolgt. Suchrouten müssen dieselbe Rufnummer enthalten; bei Detailrouten ist nur die beobachtete Form mit numerischer Eintragskennung zulässig. Der Ergebniseintrag muss weiterhin die vollständige angefragte Rufnummer enthalten.
-- Antworten sind auf 2 MiB begrenzt; eine Anfrage einschließlich Weiterleitung hat eine Zeitgrenze von 15 Sekunden. HTTP 429, erforderliche Anmeldung, Sperren und unbekannte Antwortstrukturen stoppen den Lauf. Es gibt keine automatischen Wiederholungen, Proxywechsel oder Browser-Imitation.
+- Antworten sind auf 2 MiB begrenzt; eine Anfrage einschließlich Weiterleitung hat eine Zeitgrenze von 15 Sekunden. HTTP 429, erforderliche Anmeldung und echte Sperren stoppen den Lauf sofort. Eine einzelne nicht auswertbare Antwort wird getrennt und ohne negativen Cache übersprungen. Nach drei nicht auswertbaren Anbieterantworten ohne erfolgreich ausgewertete neue Antwort dazwischen stoppt der Lauf. Cachetreffer, lokal nicht unterstützte Nummern und vorübergehende Fehler setzen den Zähler nicht zurück. Es gibt keine automatischen Wiederholungen, Proxywechsel oder Browser-Imitation.
+
+### Korrektur des gemeldeten Abbruchs in 0.3.1
+
+Der gemeldete Screenshot zeigt 22 bearbeitete von 157 Nummern, 21 Nichttreffer und einen Fehler. Die wörtliche Fehlermeldung stammt aus dem allgemeinen Parser-Fallback. In 0.3.0 lieferte dieser Fallback `Blocked`, auch wenn weder eine Zugriffssperre noch eine Bestätigungsseite erkannt worden war. Der Stapeldienst beendete deshalb alle folgenden Abfragen. Aus dem Screenshot lässt sich die konkrete HTML-Antwort der betroffenen Nummer nicht rekonstruieren.
+
+Die neue Einordnung `UnrecognizedResponse` wird nicht als Nichttreffer gespeichert und überschreibt keinen vorhandenen Namen. Die zugehörige Regression verwendet 157 synthetische Nummern, 8 gültige Cacheeinträge und eine unlesbare Antwort an Position 22. Sie prüft, dass nachfolgende Nummern verarbeitet werden. Zusätzliche Fälle prüfen wiederholte unlesbare Antworten, unveränderte echte Stoppsignale, Restmengen und lokale Fehlerdetails ohne HTML-Inhalte.
 
 ### Beobachtete Anbieterantworten
 
@@ -80,6 +86,8 @@ Am 19. November 2026 wurde die aktuelle öffentliche Webseite mit wenigen veröf
 Die aktuelle Ergebnisliste enthält den Namen in `hitlnk_name` und die Rufnummer innerhalb der zugehörigen `phoneblock`-Struktur. Die geprüfte Detailseite verwendet zusammengehörige `Organization`-Microdata mit vollständiger Rufnummer und Name. Solche strukturierten Angaben können per CSS ausgeblendet sein; Skripte und inaktive Vorlagen werden dagegen nicht als Einträge ausgewertet. Der Parser wurde eigenständig für die beobachteten Strukturen geschrieben; es wurden kein jFritz-Code und keine jFritz-Regulärausdrücke übernommen. Reduzierte künstliche Prüffälle bilden die Struktur nach. Die vollständige Geschäftsseitenantwort bleibt außerhalb des Repositorys.
 
 Der tatsächliche Produktionsanbieter lieferte im Live-Test für den veröffentlichten Geschäftsanschluss von „Juwelier Leicht, Juwelier im Hotel Adlon“ den eindeutigen Status `Found` und genau diesen Namen. Eine separat erfasste Sparkassenliste mit unterschiedlichen Filialbezeichnungen wurde korrekt als `Ambiguous` erkannt; eine echte Nichttrefferseite als `NotFound`. Details und reproduzierbare, ausdrücklich aufgerufene Prüfmodi stehen unter `tests/ReverseLookupProviderChecks/README.md`.
+
+Am 26. November 2026 wurden dieselben drei veröffentlichten Geschäftsbeispiele erneut abgerufen. Die beobachteten Strukturen für Detailtreffer, Nichttreffer und mehrere Filialtreffer waren weiterhin vorhanden. Daraus folgt keine Aussage über den unbekannten Einzelfall im Nutzerscreenshot.
 
 Ein Live-Ergebnis belegt die Erreichbarkeit und Struktur zum Prüfzeitpunkt, keine zugesicherte Verfügbarkeit oder Trefferquote. Die automatisierten Prüfsuiten und der Windows-Test fragen keine persönlichen Rufnummern und keinen externen Dienst ab.
 
@@ -93,6 +101,7 @@ Ein Live-Ergebnis belegt die Erreichbarkeit und Struktur zum Prüfzeitpunkt, kei
 - Der Demo-Anruf ist ausdrücklich beschriftet und gelangt nicht in den echten Verlauf.
 - Die Breite jeder Reiterbeschriftung wird gegen den tatsächlich benötigten WPF-Text geprüft. Die in 0.2.0 sichtbar gewordene Beschneidung durch äußere Abstände ist in 0.2.1 korrigiert.
 - Eine ausdrücklich markierte, synthetische Anrufliste enthält drei Zeilen mit zwei verschiedenen Rufnummern. Ein lokaler Testanbieter ersetzt den Internetdienst. Der Test prüft den gesamten Verlauf trotz aktivem Filter, nur eine Anfrage für die doppelte unbekannte Nummer, Namensanzeige in beiden Zeilen, spätere Anrufe, Suche, Widget, Herkunft, Speicherung und Vorrang des eigenen Kontakts.
+- Ein zusätzlicher Ablauf enthält eine nicht auswertbare Nummer vor einem späteren erfolgreichen Treffer. Er prüft getrennte Zähler, Restmenge, sichtbaren Fehlergrund, den späteren Namen und die nutzbare Problemliste, auch bei 600 Pixel Fensterhöhe.
 - Große Ansicht, Verlauf mit erkannten Namen, Einrichtung mit den FRITZ!Box-Zugangsfeldern und kompaktes Widget werden tatsächlich gerendert und als PNG erfasst.
 - Erfolg erzeugt `smoke-result.json` mit `passed: true`; Fehler führen zu einem von null verschiedenen Prozess-Exitcode.
 

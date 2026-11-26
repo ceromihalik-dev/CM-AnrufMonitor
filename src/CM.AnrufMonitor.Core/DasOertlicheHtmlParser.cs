@@ -68,7 +68,11 @@ internal static class DasOertlicheHtmlParser
             && nodes.Any(x => IsExplicitEmptyResult(x) && HasNoResultMessage(VisibleText(x, 2000, cancellationToken))))
             return new(ReverseLookupStatus.NotFound, "", "Das Örtliche meldet keinen öffentlichen Eintrag zu dieser Rufnummer.");
 
-        return new(ReverseLookupStatus.Blocked, "", "Die Antwort von Das Örtliche konnte keiner eindeutigen Rufnummer zugeordnet werden. Die Suche wurde angehalten.");
+        // A page that has neither a proven identity nor an explicit no-hit message is not
+        // evidence of an access block. Keep it uncached and let the batch continue past this
+        // number. Explicit challenges above remain stopping results.
+        return new(ReverseLookupStatus.UnrecognizedResponse, "",
+            "Die Antwort von Das Örtliche konnte für diese Rufnummer nicht ausgewertet werden. Es wurde kein Name übernommen.");
     }
 
     private static void ReadJsonEntities(string json, string number, HashSet<string> names, CancellationToken cancellationToken)

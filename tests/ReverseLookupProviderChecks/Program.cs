@@ -9,6 +9,7 @@ int passed = 0, failed = 0;
 string noHit = await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "Fixtures", "no-hit-current.html"));
 string currentResult = await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "Fixtures", "result-current.html"));
 string currentDetail = await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "Fixtures", "detail-current.html"));
+string unrecognizedResponse = await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "Fixtures", "unrecognized-response.html"));
 
 // A deliberately explicit, opt-in smoke check for one provider-listed public business.
 // Normal execution and CI never enter this branch or access the Internet.
@@ -69,45 +70,76 @@ await Check("Two names for exact same number are ambiguous", async () =>
 await Check("Repeated equivalent identity does not create ambiguity", async () =>
     await Status(JsonEntity("Example GmbH", "030399760") + JsonEntity("EXAMPLE GMBH", "+4930399760"), ReverseLookupStatus.Found, "Example GmbH"));
 await Check("No matching by suffix", async () =>
-    await Status(JsonEntity("Wrong owner", "+4930330399760"), ReverseLookupStatus.Blocked));
+    await Status(JsonEntity("Wrong owner", "+4930330399760"), ReverseLookupStatus.UnrecognizedResponse));
 await Check("No matching without full area or country prefix", async () =>
-    await Status(JsonEntity("Wrong owner", "399760"), ReverseLookupStatus.Blocked));
+    await Status(JsonEntity("Wrong owner", "399760"), ReverseLookupStatus.UnrecognizedResponse));
 await Check("No cross-entity pairing of global name and nested telephone", async () =>
-    await Status("""<script type="application/ld+json">{"@type":"Organization","name":"Global brand","mainEntity":{"@type":"Organization","telephone":"030399760"}}</script>""", ReverseLookupStatus.Blocked));
+    await Status("""<script type="application/ld+json">{"@type":"Organization","name":"Global brand","mainEntity":{"@type":"Organization","telephone":"030399760"}}</script>""", ReverseLookupStatus.UnrecognizedResponse));
 await Check("WebSite metadata is never a caller name", async () =>
-    await Status("""<script type="application/ld+json">{"@type":"WebSite","name":"Directory","telephone":"030399760"}</script>""", ReverseLookupStatus.Blocked));
+    await Status("""<script type="application/ld+json">{"@type":"WebSite","name":"Directory","telephone":"030399760"}</script>""", ReverseLookupStatus.UnrecognizedResponse));
 await Check("Malformed JSON is not a negative result", async () =>
-    await Status("""<script type="application/ld+json">{"name":broken}</script>""", ReverseLookupStatus.Blocked));
+    await Status("""<script type="application/ld+json">{"name":broken}</script>""", ReverseLookupStatus.UnrecognizedResponse));
+await Check("An individually unreadable result is distinct from an access block and a miss", async () =>
+{
+    using var handler = new StubHandler((_, _) => Task.FromResult(Html(unrecognizedResponse)));
+    using var provider = new DasOertlicheReverseLookupProvider(handler);
+    ReverseLookupResult result = await provider.LookupAsync(Number, CancellationToken.None);
+    Equal(ReverseLookupStatus.UnrecognizedResponse, result.Status);
+    Equal("", result.Name);
+    Equal("", result.SourceUrl);
+    Require(!result.Message.Contains("angehalten", StringComparison.OrdinalIgnoreCase), "Individual response claims to stop the batch.");
+    Require(!result.Message.Contains("Beispielkontakt", StringComparison.Ordinal)
+        && !result.Message.Contains("030399760", StringComparison.Ordinal)
+        && !result.Message.Contains(Number, StringComparison.Ordinal)
+        && !result.Message.Contains("<", StringComparison.Ordinal), "Response diagnostics contain personal page data.");
+});
+await Check("Empty successful response is unrecognized rather than a cached miss", async () =>
+    await Status("", ReverseLookupStatus.UnrecognizedResponse));
+await Check("The next exact identity remains resolvable after an unrecognized answer", async () =>
+{
+    int request = 0;
+    using var handler = new StubHandler((_, _) => Task.FromResult(Html(++request == 1
+        ? unrecognizedResponse : JsonEntity("Öffentliches Beispielunternehmen", "030399760"))));
+    using var provider = new DasOertlicheReverseLookupProvider(handler);
+    Equal(ReverseLookupStatus.UnrecognizedResponse, (await provider.LookupAsync(Number, CancellationToken.None)).Status);
+    ReverseLookupResult next = await provider.LookupAsync(Number, CancellationToken.None);
+    Equal(ReverseLookupStatus.Found, next.Status);
+    Equal("Öffentliches Beispielunternehmen", next.Name);
+    Equal(2, handler.Calls);
+});
 await Check("Microdata content values and exact scope", async () =>
     await Status("""<section itemscope itemtype="https://schema.org/LocalBusiness"><meta itemprop="name" content="Bäckerei &amp; Café"><meta itemprop="telephone" content="+49 30 399760"></section>""", ReverseLookupStatus.Found, "Bäckerei & Café"));
 await Check("Nested microdata names cannot attach to outer phone", async () =>
-    await Status("""<section itemscope><meta itemprop="telephone" content="030399760"><aside itemscope><span itemprop="name">Wrong owner</span></aside></section>""", ReverseLookupStatus.Blocked));
+    await Status("""<section itemscope><meta itemprop="telephone" content="030399760"><aside itemscope><span itemprop="name">Wrong owner</span></aside></section>""", ReverseLookupStatus.UnrecognizedResponse));
 await Check("Result card binds name to its own tel link", async () =>
     await Status("""<div class="hit"><a class="name"><span>Beispiel Handel</span></a><a href="tel:+4930399760">Anrufen</a></div>""", ReverseLookupStatus.Found, "Beispiel Handel"));
 await Check("Different result cards cannot cross-match", async () =>
-    await Status("""<div class="hit"><a class="name">Wrong owner</a><a href="tel:+49301234567">Anrufen</a></div><div class="hit"><a href="tel:+4930399760">Anrufen</a></div>""", ReverseLookupStatus.Blocked));
+    await Status("""<div class="hit"><a class="name">Wrong owner</a><a href="tel:+49301234567">Anrufen</a></div><div class="hit"><a href="tel:+4930399760">Anrufen</a></div>""", ReverseLookupStatus.UnrecognizedResponse));
 await Check("Nested result cards cannot donate their names to parent phone", async () =>
-    await Status("""<div class="hit"><a href="tel:+4930399760">Anrufen</a><div class="hit"><a class="name">Wrong owner</a><a href="tel:+49301234567">Anrufen</a></div></div>""", ReverseLookupStatus.Blocked));
+    await Status("""<div class="hit"><a href="tel:+4930399760">Anrufen</a><div class="hit"><a class="name">Wrong owner</a><a href="tel:+49301234567">Anrufen</a></div></div>""", ReverseLookupStatus.UnrecognizedResponse));
 await Check("Page heading and query echo are not an identity", async () =>
-    await Status("""<h1>Das Örtliche</h1><input name="ph" value="030399760"><a href="tel:030399760">Anrufen</a>""", ReverseLookupStatus.Blocked));
+    await Status("""<h1>Das Örtliche</h1><input name="ph" value="030399760"><a href="tel:030399760">Anrufen</a>""", ReverseLookupStatus.UnrecognizedResponse));
 await Check("Hidden result card is ignored", async () =>
-    await Status("""<div class="hit" hidden><a class="name">Hidden owner</a><a href="tel:030399760">Anrufen</a></div>""", ReverseLookupStatus.Blocked));
+    await Status("""<div class="hit" hidden><a class="name">Hidden owner</a><a href="tel:030399760">Anrufen</a></div>""", ReverseLookupStatus.UnrecognizedResponse));
 await Check("JavaScript text is never evaluated as a result", async () =>
-    await Status("""<script>document.write('<div class="hit"><a class="name">Fake</a><a href="tel:030399760">Call</a></div>');</script>""", ReverseLookupStatus.Blocked));
+    await Status("""<script>document.write('<div class="hit"><a class="name">Fake</a><a href="tel:030399760">Call</a></div>');</script>""", ReverseLookupStatus.UnrecognizedResponse));
 await Check("Current explicit no-hit HTML accepts HTTP404", async () =>
     await Status(noHit, ReverseLookupStatus.NotFound, status: HttpStatusCode.NotFound));
 await Check("Current explicit no-hit HTML accepts HTTP200", async () =>
     await Status(noHit, ReverseLookupStatus.NotFound));
 await Check("No-hit must echo the exact requested phone", async () =>
-    await Status(noHit.Replace("value=\"030399760\"", "value=\"0301234567\"", StringComparison.Ordinal), ReverseLookupStatus.Blocked, status: HttpStatusCode.NotFound));
+    await Status(noHit.Replace("value=\"030399760\"", "value=\"0301234567\"", StringComparison.Ordinal), ReverseLookupStatus.UnrecognizedResponse, status: HttpStatusCode.NotFound));
 await Check("No-hit without input echo remains unknown", async () =>
-    await Status("""<div class="nonumber01">Leider konnten wir keinen Eintrag zu dieser Telefonnummer finden.</div>""", ReverseLookupStatus.Blocked));
+    await Status("""<div class="nonumber01">Leider konnten wir keinen Eintrag zu dieser Telefonnummer finden.</div>""", ReverseLookupStatus.UnrecognizedResponse));
 await Check("FAQ no-hit wording never creates NotFound", async () =>
-    await Status("""<input name="ph" value="030399760"><article class="faq">Leider konnten wir keinen Eintrag zu dieser Telefonnummer finden.</article>""", ReverseLookupStatus.Blocked));
+    await Status("""<input name="ph" value="030399760"><article class="faq">Leider konnten wir keinen Eintrag zu dieser Telefonnummer finden.</article>""", ReverseLookupStatus.UnrecognizedResponse));
 await Check("Generic HTTP404 never creates NotFound", async () =>
-    await Status("<html><h1>Not Found</h1></html>", ReverseLookupStatus.Blocked, status: HttpStatusCode.NotFound));
+    await Status("<html><h1>Not Found</h1></html>", ReverseLookupStatus.UnrecognizedResponse, status: HttpStatusCode.NotFound));
 await Check("HTTP404 cannot carry a positive identity", async () =>
-    await Status(JsonEntity("Example", "030399760"), ReverseLookupStatus.Blocked, status: HttpStatusCode.NotFound));
+    await Status(JsonEntity("Example", "030399760"), ReverseLookupStatus.UnrecognizedResponse, status: HttpStatusCode.NotFound));
+await Check("An HTTP404 challenge stays a real access block", async () =>
+    await Status("<title>Security Check / CAPTCHA</title><form>Verify you are human</form>",
+        ReverseLookupStatus.Blocked, status: HttpStatusCode.NotFound));
 await Check("Legacy HTTP410 stops even with no-hit wording", async () =>
     await Status(noHit, ReverseLookupStatus.Blocked, status: HttpStatusCode.Gone));
 await Check("HTTP403 blocks without interpreting body", async () =>
@@ -255,10 +287,13 @@ await Check("CAPTCHA page stops even if it contains misleading identity metadata
     await Status("<title>Security Check / CAPTCHA</title>" + JsonEntity("Example", "030399760"), ReverseLookupStatus.Blocked));
 await Check("Challenge script is not executed or bypassed", async () =>
     await Status("""<script src="https://challenges.cloudflare.com/turnstile/v0/api.js"></script><h1>Verify you are human</h1>""", ReverseLookupStatus.Blocked));
+await Check("A visible German CAPTCHA request still stops the search", async () =>
+    await Status("<html><head><title>Rückwärtssuche</title></head><body><form>Bitte bestätigen Sie, dass Sie kein Roboter sind.</form></body></html>",
+        ReverseLookupStatus.Blocked));
 await Check("Unreasonably deep HTML is bounded", async () =>
     await Status(string.Concat(Enumerable.Repeat("<div>", 150)) + JsonEntity("Example", "030399760"), ReverseLookupStatus.Blocked));
 await Check("Overlong identity is rejected rather than truncated", async () =>
-    await Status(JsonEntity(new string('a', 301), "030399760"), ReverseLookupStatus.Blocked));
+    await Status(JsonEntity(new string('a', 301), "030399760"), ReverseLookupStatus.UnrecognizedResponse));
 await Check("HTML entities decoded and display controls removed", async () =>
     await Status(JsonEntity("  Beispiel  &amp;  Söhne\u202e  ", "030399760"), ReverseLookupStatus.Found, "Beispiel & Söhne"));
 await Check("Current result markup binds labelled phone text to matching name", async () =>
@@ -266,38 +301,38 @@ await Check("Current result markup binds labelled phone text to matching name", 
 await Check("Current detail page accepts intentionally hidden Organization metadata", async () =>
     await Status(currentDetail, ReverseLookupStatus.Found, "Juwelier Leicht, Juwelier im Hotel Adlon", number: "+49302290212"));
 await Check("Current detail metadata still requires exact full number", async () =>
-    await Status(currentDetail, ReverseLookupStatus.Blocked));
+    await Status(currentDetail, ReverseLookupStatus.UnrecognizedResponse));
 await Check("Intentionally hidden metadata inside a template remains inert", async () =>
-    await Status("<template>" + currentDetail + "</template>", ReverseLookupStatus.Blocked, number: "+49302290212"));
+    await Status("<template>" + currentDetail + "</template>", ReverseLookupStatus.UnrecognizedResponse, number: "+49302290212"));
 await Check("Different current branch names remain ambiguous", async () =>
     await Status(currentResult.Replace("href=\"/another-ignored-detail\">Sparkasse Schwaben-Bodensee", "href=\"/another-ignored-detail\">Sparkasse Schwaben-Bodensee - SB-Filiale", StringComparison.Ordinal), ReverseLookupStatus.Ambiguous, number: "+4983316090"));
 await Check("Current phoneblock never matches by suffix", async () =>
-    await Status(currentResult, ReverseLookupStatus.Blocked, number: "+493083316090"));
+    await Status(currentResult, ReverseLookupStatus.UnrecognizedResponse, number: "+493083316090"));
 await Check("A fax-only or unlabelled phoneblock is not a telephone hit", async () =>
-    await Status(currentResult.Replace("Tel.", "Fax", StringComparison.Ordinal), ReverseLookupStatus.Blocked, number: "+4983316090"));
+    await Status(currentResult.Replace("Tel.", "Fax", StringComparison.Ordinal), ReverseLookupStatus.UnrecognizedResponse, number: "+4983316090"));
 await Check("Nonbreaking spaces in published phone numbers are accepted", async () =>
     await Status(JsonEntity("Example", "030\u00a039976-0"), ReverseLookupStatus.Found, "Example"));
 await Check("FAQ, application and contact-label metadata are not caller entities", async () =>
 {
     foreach (string type in new[] { "FAQPage", "Question", "ContactPoint", "SoftwareApplication", "MadeUpEntity" })
-        await Status(JsonEntity("Not an identity", "030399760").Replace("Organization", type, StringComparison.Ordinal), ReverseLookupStatus.Blocked);
+        await Status(JsonEntity("Not an identity", "030399760").Replace("Organization", type, StringComparison.Ordinal), ReverseLookupStatus.UnrecognizedResponse);
 });
 await Check("Microdata WebSite type is not a caller entity", async () =>
-    await Status("""<section itemscope itemtype="https://schema.org/WebSite"><span itemprop="name">Directory brand</span><meta itemprop="telephone" content="030399760"></section>""", ReverseLookupStatus.Blocked));
+    await Status("""<section itemscope itemtype="https://schema.org/WebSite"><span itemprop="name">Directory brand</span><meta itemprop="telephone" content="030399760"></section>""", ReverseLookupStatus.UnrecognizedResponse));
 await Check("A result card cannot borrow a nested microdata phone", async () =>
-    await Status("""<div class="hit"><a class="name">Wrong parent</a><section itemscope itemtype="https://schema.org/Person"><a href="tel:030399760">call</a></section></div>""", ReverseLookupStatus.Blocked));
+    await Status("""<div class="hit"><a class="name">Wrong parent</a><section itemscope itemtype="https://schema.org/Person"><a href="tel:030399760">call</a></section></div>""", ReverseLookupStatus.UnrecognizedResponse));
 await Check("Microdata cannot borrow a nested result-card phone", async () =>
-    await Status("""<section itemscope itemtype="https://schema.org/Organization"><span itemprop="name">Wrong parent</span><div class="hit"><a itemprop="telephone" href="tel:030399760">call</a></div></section>""", ReverseLookupStatus.Blocked));
+    await Status("""<section itemscope itemtype="https://schema.org/Organization"><span itemprop="name">Wrong parent</span><div class="hit"><a itemprop="telephone" href="tel:030399760">call</a></div></section>""", ReverseLookupStatus.UnrecognizedResponse));
 await Check("Raw script closing prefix cannot expose JavaScript templates as HTML", async () =>
-    await Status("""<script>const marker="</scriptx>"; const html='<div class="hit"><a class="name">Script fake</a><a href="tel:030399760">call</a></div>';</script>""", ReverseLookupStatus.Blocked));
+    await Status("""<script>const marker="</scriptx>"; const html='<div class="hit"><a class="name">Script fake</a><a href="tel:030399760">call</a></div>';</script>""", ReverseLookupStatus.UnrecognizedResponse));
 await Check("Inert templates cannot create live caller identities", async () =>
-    await Status("""<template><div class="hit"><a class="name">Placeholder Name</a><a href="tel:030399760">call</a></div></template>""", ReverseLookupStatus.Blocked));
+    await Status("""<template><div class="hit"><a class="name">Placeholder Name</a><a href="tel:030399760">call</a></div></template>""", ReverseLookupStatus.UnrecognizedResponse));
 await Check("Metadata in a template is also inert", async () =>
-    await Status("<template>" + JsonEntity("Placeholder Name", "030399760") + "</template>", ReverseLookupStatus.Blocked));
+    await Status("<template>" + JsonEntity("Placeholder Name", "030399760") + "</template>", ReverseLookupStatus.UnrecognizedResponse));
 await Check("Title and textarea raw text cannot expose fake result cards", async () =>
 {
     foreach (string tag in new[] { "title", "textarea" })
-        await Status("<" + tag + ">" + """<div class="hit"><a class="name">Raw fake</a><a href="tel:030399760">call</a></div>""" + "</" + tag + ">", ReverseLookupStatus.Blocked);
+        await Status("<" + tag + ">" + """<div class="hit"><a class="name">Raw fake</a><a href="tel:030399760">call</a></div>""" + "</" + tag + ">", ReverseLookupStatus.UnrecognizedResponse);
 });
 await Check("A valid same-origin positive-search redirect is followed", async () =>
 {
@@ -349,7 +384,7 @@ await Check("Detail redirect never supplies an identity without the final exact 
         return Task.FromResult(Html(currentDetail));
     });
     using var provider = new DasOertlicheReverseLookupProvider(handler);
-    Equal(ReverseLookupStatus.Blocked, (await provider.LookupAsync(Number, CancellationToken.None)).Status);
+    Equal(ReverseLookupStatus.UnrecognizedResponse, (await provider.LookupAsync(Number, CancellationToken.None)).Status);
 });
 await Check("Redirect validation rejects host, scheme, path, userinfo and changed numbers", async () =>
 {

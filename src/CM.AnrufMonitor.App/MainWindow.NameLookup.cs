@@ -27,6 +27,7 @@ public partial class MainWindow
 
     private void InitializeNameLookup()
     {
+        LookupProblemsGrid.ItemsSource = _lookupProblems;
         try
         {
             _reverseStore = new ReverseLookupStore(_dataDirectory);
@@ -115,6 +116,7 @@ public partial class MainWindow
         _nameLookupCancellation = new CancellationTokenSource();
         int generation = ++_nameLookupGeneration;
         _nameLookupContextChanged = false;
+        ResetNameLookupProblems();
         SetNameLookupBusy(true);
         _nameLookupTask = RunNameLookupAsync(snapshot, scope, generation, _nameLookupCancellation.Token, testProvider);
         await _nameLookupTask;
@@ -139,27 +141,29 @@ public partial class MainWindow
             ShowNameLookupStatus(scope + ": " + plan.SourceRecordCount + " Anrufe · " + plan.TotalCount + " eindeutige Rufnummern ohne Kontakt · "
                 + plan.RequestCount + " Abfragen · " + plan.CachedCount + " gespeicherte Ergebnisse"
                 + (plan.UnsupportedCount > 0 ? " · " + plan.UnsupportedCount + " nicht unterstützt" : ""));
-            if (plan.TotalCount == 0)
-            {
-                ShowNameLookupStatus("Keine unbekannten, unterstützten externen Rufnummern für diese Auswahl. Vorhandene Kontakte, eigene Nummern und interne Nummern werden nicht abgefragt."
-                    + (plan.UnsupportedCount > 0 ? " " + plan.UnsupportedCount + " Rufnummern werden vom Anbieter nicht unterstützt." : ""));
-                return;
-            }
             var progress = new Progress<ReverseLookupProgress>(update =>
             {
                 if (generation != _nameLookupGeneration || !_nameLookupRunning || _savedOnExit) return;
                 NameLookupProgress.Value = Math.Min(update.CompletedCount, NameLookupProgress.Maximum);
-                ShowNameLookupStatus(LookupCounts(update.CompletedCount, update.TotalCount, update.FoundCount, update.NotFoundCount,
-                    update.AmbiguousCount, update.ErrorCount, update.UnsupportedCount));
+                ShowNameLookupStatus((update.IsStopped ? "Suche wird angehalten. " : "Suche läuft. ")
+                    + LookupCounts(update.CompletedCount, update.TotalCount, update.FoundCount, update.NotFoundCount,
+                        update.AmbiguousCount, update.UnrecognizedCount, update.ErrorCount, update.UnsupportedCount));
                 ReverseLookupResult? result = update.Result;
                 if (result is not null)
                 {
+                    AddLookupProblem(result);
                     if (result.Status is ReverseLookupStatus.Found or ReverseLookupStatus.NotFound)
+                    {
                         _internetNames[result.NormalizedNumber] = result;
-                    else if (result.Status == ReverseLookupStatus.Ambiguous) _internetNames.Remove(result.NormalizedNumber);
-                    // A transient provider failure intentionally preserves a previously found name.
-                    UpdateInternetCacheInfo();
-                    RefreshHistory();
+                        UpdateInternetCacheInfo();
+                        RefreshHistory();
+                    }
+                    else if (result.Status == ReverseLookupStatus.Ambiguous && _internetNames.Remove(result.NormalizedNumber))
+                    {
+                        UpdateInternetCacheInfo();
+                        RefreshHistory();
+                    }
+                    // Unclear or failed responses preserve the old name without rebuilding the rows.
                 }
             });
             ReverseLookupBatchSummary summary = await service.RunAsync(plan, progress, token);
@@ -171,13 +175,9 @@ public partial class MainWindow
             if (generation == _nameLookupGeneration || !_nameLookupContextChanged)
             {
                 NameLookupProgress.Value = Math.Min(summary.CompletedCount, NameLookupProgress.Maximum);
-                string ending = summary.Cancelled ? "Abgebrochen. " : summary.StopStatus.HasValue ? "Suche angehalten. " : "Fertig. ";
-                string text = ending + LookupCounts(summary.CompletedCount, summary.TotalCount, summary.FoundCount,
-                    summary.NotFoundCount, summary.AmbiguousCount, summary.ErrorCount, summary.UnsupportedCount)
-                    + " · " + summary.CachedCount + " aus dem lokalen Speicher";
-                if (summary.Message.Length > 0) text += "\n" + summary.Message;
-                if (summary.Cancelled || summary.StopStatus.HasValue) text += " Bereits gespeicherte Treffer bleiben erhalten.";
-                ShowNameLookupStatus(text, error: summary.StopStatus.HasValue || summary.ErrorCount > 0);
+                SetLookupProblems(summary.UnresolvedResults);
+                ShowNameLookupStatus(LookupSummaryText(summary), error: summary.StopStatus.HasValue || summary.ErrorCount > 0);
+                NameLookupStatus.ToolTip = summary.Message.Length > 0 ? summary.Message : null;
             }
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested)
@@ -200,13 +200,42 @@ public partial class MainWindow
         }
     }
 
-    private static string LookupCounts(int completed, int total, int found, int notFound, int ambiguous, int errors, int unsupported)
-        => completed + "/" + total + " Nummern · " + found + " gefunden · " + notFound + " ohne Treffer · " + ambiguous + " mehrdeutig"
-            + (errors > 0 ? " · " + errors + " Fehler" : "") + (unsupported > 0 ? " · " + unsupported + " nicht unterstützt" : "");
+    private static string LookupCounts(int completed, int total, int found, int notFound, int ambiguous, int unrecognized, int errors, int unsupported)
+        => completed + "/" + total + " Nummern bearbeitet · " + found + " gefunden · "
+            + notFound + (notFound == 1 ? " bestätigter Nichttreffer" : " bestätigte Nichttreffer")
+            + (ambiguous > 0 ? " · " + ambiguous + " mehrdeutig" : "")
+            + (unrecognized > 0 ? " · " + unrecognized + (unrecognized == 1 ? " Antwort nicht auswertbar" : " Antworten nicht auswertbar") : "")
+            + (errors > 0 ? " · " + errors + " Abfragefehler" : "") + (unsupported > 0 ? " · " + unsupported + " nicht unterstützt" : "");
+
+    private static string LookupSummaryText(ReverseLookupBatchSummary summary)
+    {
+        if (summary.TotalCount == 0)
+            return "Keine abfragbaren Rufnummern ohne Kontakt. Vorhandene Kontakte, eigene und interne Nummern werden nicht abgefragt."
+                + (summary.UnsupportedCount > 0 ? " " + summary.UnsupportedCount + " Rufnummern werden vom Anbieter nicht unterstützt; siehe Problemliste." : "");
+        string ending = summary.Cancelled ? "Abgebrochen." : summary.StopStatus switch
+        {
+            ReverseLookupStatus.UnrecognizedResponse => "Angehalten: Mehrere Anbieterantworten waren nicht auswertbar.",
+            ReverseLookupStatus.Blocked => "Angehalten: Der Abruf konnte nicht sicher fortgesetzt werden.",
+            ReverseLookupStatus.RateLimited => "Angehalten: Das Abfragelimit des Anbieters ist erreicht.",
+            ReverseLookupStatus.AuthRequired => "Angehalten: Der Anbieter verlangt eine Anmeldung.",
+            null when summary.UnresolvedResults.Count > 0 => "Abgeschlossen mit Hinweisen.",
+            null => "Abgeschlossen.",
+            _ => "Die Suche wurde angehalten."
+        };
+        int remaining = summary.RemainingNumbers.Count;
+        string text = ending + " " + LookupCounts(summary.CompletedCount, summary.TotalCount, summary.FoundCount,
+            summary.NotFoundCount, summary.AmbiguousCount, summary.UnrecognizedCount, summary.ErrorCount, summary.UnsupportedCount)
+            + ".\n" + remaining + (remaining == 1 ? " Nummer noch nicht bearbeitet" : " Nummern noch nicht bearbeitet")
+            + " · " + summary.CachedCount + " Ergebnisse aus dem lokalen Speicher."
+            + (summary.UnresolvedResults.Count > 0 ? " Unklare Antworten und Fehler stehen in der Problemliste." : "");
+        if (summary.StopStatus.HasValue && !string.IsNullOrWhiteSpace(summary.Message)) text += "\n" + summary.Message;
+        return text;
+    }
 
     private void ShowNameLookupStatus(string text, bool error = false)
     {
         NameLookupStatus.Text = text;
+        NameLookupStatus.ToolTip = null;
         NameLookupStatus.Foreground = BrushOf(error ? "#FFB3B8" : "#F5F9FF");
         NameLookupStatus.Visibility = Visibility.Visible;
     }
@@ -268,6 +297,7 @@ public partial class MainWindow
         {
             ++_nameLookupGeneration;
             _reverseStore.Save(Array.Empty<ReverseLookupResult>());
+            ResetNameLookupProblems();
             ReloadInternetNames();
             RefreshHistory();
             NameLookupProgress.Value = 0;

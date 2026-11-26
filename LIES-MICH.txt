@@ -1,4 +1,4 @@
-CM ANRUFMONITOR 0.3.0
+CM ANRUFMONITOR 0.3.1
 Ersteller: C. Mihalik
 Windows 10 / 11, 64-Bit
 
@@ -92,8 +92,15 @@ frühere Internetzuordnung auf. Unter Einrichtung lassen sich über
 Für einzelne Nummern: Rechtsklick > "Name suchen und übernehmen".
 "Rückwärtssuche im Browser …" öffnet weiterhin eine externe Browser-Suche.
 Unterdrückte Nummern bleiben unbekannt. Nicht veröffentlichte oder für die
-Rückwärtssuche gesperrte Einträge können nicht erkannt werden. Bei Sperren,
-verlangter Anmeldung oder geänderter Antwortstruktur stoppt die Suche.
+Rückwärtssuche gesperrte Einträge können nicht erkannt werden. Eine einzelne
+nicht auswertbare Antwort wird übersprungen; die übrigen
+Nummern werden weiter gesucht. Sie zählt nicht als Nichttreffer und löscht
+keinen gespeicherten Namen. Die aufklappbare Problemliste zeigt Nummer und
+Grund. Nach drei solchen Anbieterantworten ohne eine erfolgreich ausgewertete
+neue Antwort dazwischen hält die Suche an. Gespeicherte Treffer setzen diesen
+Zähler nicht zurück. Sperren, Anfragenbegrenzungen und erforderliche Anmeldung
+stoppen den Lauf sofort. Ein späterer manueller Suchlauf verwendet vorhandene
+Ergebnisse wieder; der Anrufverlauf muss nicht gelöscht werden.
 
 BEDIENUNG
 

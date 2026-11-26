@@ -2,7 +2,7 @@ namespace CM.AnrufMonitor.Core;
 
 public enum ReverseLookupStatus
 {
-    Found, NotFound, Ambiguous, TemporaryError, RateLimited, AuthRequired, Blocked, Unsupported
+    Found, NotFound, Ambiguous, TemporaryError, RateLimited, AuthRequired, Blocked, Unsupported, UnrecognizedResponse
 }
 
 /// <summary>An Internet result stays separate from trusted manual and router contacts.</summary>
@@ -34,6 +34,7 @@ public sealed record ReverseLookupBatchOptions
     public TimeSpan FoundTtl { get; init; } = TimeSpan.FromDays(30);
     public TimeSpan NotFoundTtl { get; init; } = TimeSpan.FromDays(7);
     public bool RefreshCached { get; init; }
+    public int MaximumConsecutiveUnrecognizedResponses { get; init; } = 3;
 }
 
 /// <summary>A frozen plan built from the caller's explicit history or selection snapshot.</summary>
@@ -42,7 +43,7 @@ public sealed class ReverseLookupBatchPlan
     internal ReverseLookupBatchPlan(string provider, ReverseLookupBatchOptions options,
         IEnumerable<string> numbers, IEnumerable<string> pendingNumbers,
         IEnumerable<ReverseLookupResult> cachedResults, int sourceRecordCount,
-        int skippedRecordCount, int duplicateRecordCount, int unsupportedCount)
+        int skippedRecordCount, int duplicateRecordCount, IEnumerable<string> unsupportedNumbers)
     {
         Provider = provider;
         Options = options with { };
@@ -52,7 +53,7 @@ public sealed class ReverseLookupBatchPlan
         SourceRecordCount = sourceRecordCount;
         SkippedRecordCount = skippedRecordCount;
         DuplicateRecordCount = duplicateRecordCount;
-        UnsupportedCount = unsupportedCount;
+        UnsupportedNumbers = Array.AsReadOnly(unsupportedNumbers.ToArray());
     }
 
     public string Provider { get; }
@@ -63,7 +64,8 @@ public sealed class ReverseLookupBatchPlan
     public int SourceRecordCount { get; }
     public int SkippedRecordCount { get; }
     public int DuplicateRecordCount { get; }
-    public int UnsupportedCount { get; }
+    public IReadOnlyList<string> UnsupportedNumbers { get; }
+    public int UnsupportedCount => UnsupportedNumbers.Count;
     public int TotalCount => Numbers.Count;
     public int RequestCount => PendingNumbers.Count;
     public int CachedCount => CachedResults.Count;
@@ -79,6 +81,7 @@ public sealed record ReverseLookupProgress
     public int NotFoundCount { get; init; }
     public int AmbiguousCount { get; init; }
     public int ErrorCount { get; init; }
+    public int UnrecognizedCount { get; init; }
     public int UnsupportedCount { get; init; }
     public ReverseLookupResult? Result { get; init; }
     public bool FromCache { get; init; }
@@ -95,8 +98,13 @@ public sealed record ReverseLookupBatchSummary
     public int NotFoundCount { get; init; }
     public int AmbiguousCount { get; init; }
     public int ErrorCount { get; init; }
+    public int UnrecognizedCount { get; init; }
     public int UnsupportedCount { get; init; }
     public IReadOnlyList<ReverseLookupResult> Results { get; init; } = Array.Empty<ReverseLookupResult>();
+    /// <summary>Completed uncertain/failed results plus local unsupported numbers; never raw provider HTML.</summary>
+    public IReadOnlyList<ReverseLookupResult> UnresolvedResults { get; init; } = Array.Empty<ReverseLookupResult>();
+    /// <summary>Eligible numbers not completed; this reports remaining work without inventing failed results.</summary>
+    public IReadOnlyList<string> RemainingNumbers { get; init; } = Array.Empty<string>();
     public bool Cancelled { get; init; }
     public ReverseLookupStatus? StopStatus { get; init; }
     public string Message { get; init; } = "";

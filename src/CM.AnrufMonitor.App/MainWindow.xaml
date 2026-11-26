@@ -34,7 +34,7 @@
 
    <Grid x:Name="FullContent" Grid.Row="2">
     <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
-    <Grid Margin="0,0,0,16">
+    <Grid x:Name="SummaryMetrics" Margin="0,0,0,16">
      <Grid.ColumnDefinitions><ColumnDefinition Width="2.2*" /><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
      <Border Style="{StaticResource Card}" Padding="16,12" Margin="0,0,11,0">
       <StackPanel><DockPanel><Ellipse x:Name="ConnectionDot" Width="8" Height="8" Fill="#FFE23A" Margin="0,0,8,0" DockPanel.Dock="Left" /><TextBlock x:Name="ConnectionTitle" Text="Noch nicht verbunden" FontWeight="SemiBold" FontSize="13" TextTrimming="CharacterEllipsis" /></DockPanel><TextBlock x:Name="ConnectionHost" Text="fritz.box · Port 1012" Style="{StaticResource MutedText}" Margin="16,7,0,0" TextTrimming="CharacterEllipsis" /></StackPanel>
@@ -75,7 +75,27 @@
         <ProgressBar x:Name="NameLookupProgress" Height="5" Minimum="0" Maximum="1" Value="0" Foreground="{StaticResource YellowBrush}" Background="#32102E5A" BorderThickness="0" Margin="0,8,0,5" Visibility="Collapsed" />
         <TextBlock x:Name="NameLookupStatus" Text="" TextWrapping="Wrap" FontSize="11" Foreground="{StaticResource MutedBrush}" Margin="0,4,0,0" Visibility="Collapsed" />
        </StackPanel>
-       <Border Grid.Row="2" CornerRadius="8" BorderBrush="{StaticResource LineBrush}" BorderThickness="1" ClipToBounds="True">
+       <Grid x:Name="LookupHistoryArea" Grid.Row="2" SizeChanged="LookupHistoryArea_SizeChanged">
+        <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+        <Expander x:Name="NameLookupProblems" Header="Probleme und übersprungene Nummern" Foreground="White" FontSize="11" Visibility="Collapsed" Margin="0,0,0,6" Expanded="NameLookupProblems_ExpandedChanged" Collapsed="NameLookupProblems_ExpandedChanged">
+         <Grid x:Name="LookupProblemContent" Height="160" Margin="0,6,0,4">
+          <Grid.RowDefinitions><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+          <Border BorderBrush="{StaticResource LineBrush}" BorderThickness="1" CornerRadius="6" ClipToBounds="True">
+           <DataGrid x:Name="LookupProblemsGrid" SelectionChanged="LookupProblem_SelectionChanged" RowHeight="44" FontSize="11" ScrollViewer.VerticalScrollBarVisibility="Auto">
+            <DataGrid.Columns>
+             <DataGridTextColumn Header="RUFNUMMER" Binding="{Binding Number}" Width="145" />
+             <DataGridTextColumn Header="ERGEBNIS" Binding="{Binding StatusText}" Width="145" />
+             <DataGridTextColumn Header="GRUND" Binding="{Binding Reason}" Width="*" MinWidth="140"><DataGridTextColumn.ElementStyle><Style TargetType="TextBlock"><Setter Property="TextWrapping" Value="Wrap" /><Setter Property="TextTrimming" Value="CharacterEllipsis" /><Setter Property="MaxHeight" Value="32" /><Setter Property="ToolTip" Value="{Binding Reason}" /></Style></DataGridTextColumn.ElementStyle></DataGridTextColumn>
+            </DataGrid.Columns>
+           </DataGrid>
+          </Border>
+          <WrapPanel Grid.Row="1" Margin="0,6,0,0">
+           <Button x:Name="LookupProblemBrowserButton" Content="Auswahl im Browser prüfen ↗" Click="LookupProblemBrowser_Click" Style="{StaticResource SmallButton}" IsEnabled="False" Margin="0,0,8,0" ToolTip="Nur beim Klick wird die ausgewählte deutsche Rufnummer an Das Örtliche im Browser übermittelt." />
+           <Button x:Name="LookupProblemContactButton" Content="Kontakt ergänzen" Click="LookupProblemContact_Click" Style="{StaticResource SmallButton}" IsEnabled="False" ToolTip="Die ausgewählte Rufnummer in einen eigenen Kontakt übernehmen. Der Name wird von dir eingetragen." />
+          </WrapPanel>
+         </Grid>
+        </Expander>
+       <Border Grid.Row="1" CornerRadius="8" BorderBrush="{StaticResource LineBrush}" BorderThickness="1" ClipToBounds="True">
         <Grid>
          <DataGrid x:Name="HistoryGrid" SelectionChanged="History_SelectionChanged" MouseDoubleClick="History_DoubleClick" ToolTip="Doppelklick auf einen Eintrag zeigt alle Anrufdetails.">
           <DataGrid.Columns>
@@ -94,6 +114,7 @@
          </StackPanel>
         </Grid>
        </Border>
+       </Grid>
        <TextBlock x:Name="HistoryFooter" Grid.Row="3" Text="Suche: Name oder Rufnummer eingeben. Anrufe aus Live-Anzeige und FRITZ!Box-Abgleich." Style="{StaticResource MutedText}" FontSize="10" Margin="2,9,0,0" TextWrapping="Wrap" />
       </Grid>
      </TabItem>

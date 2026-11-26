@@ -778,12 +778,17 @@ public partial class MainWindow : Window
     private void ContactFromCall_Click(object sender, RoutedEventArgs e)
     {
         if (HistoryGrid.SelectedItem is not CallRow row || string.IsNullOrWhiteSpace(row.Call.RemoteNumber)) return;
+        PrepareContactFromNumber(row.Call.RemoteNumber);
+    }
+
+    private void PrepareContactFromNumber(string number)
+    {
         MainTabs.SelectedIndex = 1;
         ContactsGrid.SelectedItem = null;
         _editingContact = null;
         SaveContactButton.Content = "Kontakt hinzufügen";
         ContactNameBox.Clear();
-        ContactNumberBox.Text = row.Call.RemoteNumber;
+        ContactNumberBox.Text = number;
         ContactNameBox.Focus();
     }
 
@@ -900,7 +905,7 @@ public partial class MainWindow : Window
     {
         if (!_ready) return;
         // Preserve usable history space on small screens without changing the normal view or widget.
-        HeroCard.Visibility = !_settings.CompactMode && ActualHeight is > 0 and < 660 ? Visibility.Collapsed : Visibility.Visible;
+        UpdateHistorySpace();
         if (_updatingLayout || WindowState != WindowState.Normal) return;
         CaptureWindow();
         ScheduleSave();
