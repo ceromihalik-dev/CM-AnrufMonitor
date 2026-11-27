@@ -82,8 +82,11 @@ public sealed class DasOertlicheReverseLookupProvider : IReverseLookupProvider, 
             DasOertlicheParsedResult parsed = DasOertlicheHtmlParser.Parse(html, normalizedNumber, timeout.Token);
             if (needsVerifiedNoHit && parsed.Status is not (ReverseLookupStatus.NotFound or ReverseLookupStatus.Blocked))
                 return Result(ReverseLookupStatus.UnrecognizedResponse, normalizedNumber,
-                    "Die Suchantwort von Das Örtliche konnte für diese Rufnummer nicht ausgewertet werden. Es liegt kein bestätigtes Suchergebnis vor.");
-            return Result(parsed.Status, normalizedNumber, parsed.Message) with
+                    $"HTTP {(int)response.StatusCode}. Kein bestätigtes Suchergebnis. "
+                    + (parsed.Status == ReverseLookupStatus.UnrecognizedResponse ? parsed.Message : "Die Antwort enthält keinen bestätigten Nichttreffer."));
+            string message = parsed.Status == ReverseLookupStatus.UnrecognizedResponse
+                ? $"HTTP {(int)response.StatusCode}. " + parsed.Message : parsed.Message;
+            return Result(parsed.Status, normalizedNumber, message) with
             {
                 Name = parsed.Name,
                 SourceUrl = parsed.Status is ReverseLookupStatus.Found or ReverseLookupStatus.NotFound

@@ -63,16 +63,22 @@ internal static class DasOertlicheHtmlParser
             return new(ReverseLookupStatus.Found, names.First(), "Name bei Das Örtliche gefunden.");
 
         // Never search the whole page for these phrases: the provider's FAQ repeats them.
-        if (nodes.Any(x => x.Tag == "input" && x.Attribute("name").Equals("ph", StringComparison.OrdinalIgnoreCase)
-                && NumberMatches(x.Attribute("value"), number))
-            && nodes.Any(x => IsExplicitEmptyResult(x) && HasNoResultMessage(VisibleText(x, 2000, cancellationToken))))
+        bool matchingSearchInput = nodes.Any(x => x.Tag == "input" && x.Attribute("name").Equals("ph", StringComparison.OrdinalIgnoreCase)
+                && NumberMatches(x.Attribute("value"), number));
+        HtmlNode[] emptyResults = nodes.Where(IsExplicitEmptyResult).ToArray();
+        bool explicitNoHit = emptyResults.Any(x => HasNoResultMessage(VisibleText(x, 2000, cancellationToken)));
+        if (matchingSearchInput && explicitNoHit)
             return new(ReverseLookupStatus.NotFound, "", "Das Örtliche meldet keinen öffentlichen Eintrag zu dieser Rufnummer.");
 
         // A page that has neither a proven identity nor an explicit no-hit message is not
         // evidence of an access block. Keep it uncached and let the batch continue past this
         // number. Explicit challenges above remain stopping results.
         return new(ReverseLookupStatus.UnrecognizedResponse, "",
-            "Die Antwort von Das Örtliche konnte für diese Rufnummer nicht ausgewertet werden. Es wurde kein Name übernommen.");
+            "Die Antwort von Das Örtliche konnte für diese Rufnummer nicht ausgewertet werden. Es wurde kein Name übernommen. "
+            + $"Diagnose: Suchfeld passend: {(matchingSearchInput ? "ja" : "nein")}; "
+            + $"Nichttrefferbereich: {emptyResults.Length}; Nichttreffertext: {(explicitNoHit ? "ja" : "nein")}; "
+            + $"Trefferbereiche: {nodes.Count(x => IsResultCard(x) && !IsHidden(x))}; "
+            + $"passende Namen: {names.Count}.");
     }
 
     private static void ReadJsonEntities(string json, string number, HashSet<string> names, CancellationToken cancellationToken)
@@ -179,7 +185,7 @@ internal static class DasOertlicheHtmlParser
         if (value.StartsWith("Tel.", StringComparison.OrdinalIgnoreCase)) value = value[4..];
         else if (value.StartsWith("Telefon:", StringComparison.OrdinalIgnoreCase)) value = value[8..];
         else return false;
-        return NumberMatches(value.Trim(), number);
+        return NumberMatches(value.TrimStart().TrimStart(':').TrimStart(), number);
     }
 
     private static bool IsResultCard(HtmlNode node) => Tokens(node.Attribute("class")).Any(ResultClasses.Contains);
@@ -244,7 +250,8 @@ internal static class DasOertlicheHtmlParser
     private static bool IsExplicitEmptyResult(HtmlNode node) => !IsHidden(node)
         && (Tokens(node.Attribute("class")).Any(EmptyClasses.Contains) || EmptyClasses.Contains(node.Attribute("id")));
 
-    private static bool HasNoResultMessage(string text) => ContainsAny(text,
+    private static bool HasNoResultMessage(string text) => ContainsAny(
+        string.Join(" ", text.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries)),
         "keine treffer", "keinen treffer", "keine ergebnisse", "kein ergebnis", "keinen eintrag", "kein eintrag", "nichts gefunden", "nicht erfolgreich");
 
     private static bool ContainsAny(string text, params string[] choices) => choices.Any(x => text.Contains(x, StringComparison.OrdinalIgnoreCase));

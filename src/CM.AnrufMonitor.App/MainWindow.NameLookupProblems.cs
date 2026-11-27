@@ -56,7 +56,7 @@ public partial class MainWindow
         ReverseLookupStatus.Blocked => "Abruf angehalten",
         ReverseLookupStatus.RateLimited => "Abfragelimit erreicht",
         ReverseLookupStatus.AuthRequired => "Anmeldung erforderlich",
-        ReverseLookupStatus.Unsupported => "Nicht unterstützt",
+        ReverseLookupStatus.Unsupported => "Nicht abfragbar (Hinweis)",
         _ => "Nicht geklärt"
     };
 

@@ -196,7 +196,7 @@ public sealed class ReverseLookupBatchService
             {
                 NormalizedNumber = number, Provider = providerId, Status = ReverseLookupStatus.Unsupported,
                 CheckedAtUtc = checkedAt, ExpiresAtUtc = checkedAt,
-                Message = "Diese Rufnummer wird vom Anbieter nicht unterstützt. Es wurde keine Internetabfrage gesendet."
+                Message = "Der aktuelle Anbieter unterstützt diese Rufnummer nicht (z. B. ausländische Landesvorwahl). Es wurde keine Internetabfrage gesendet; dies ist kein Abruffehler."
             })).ToArray();
         return new ReverseLookupBatchSummary
         {

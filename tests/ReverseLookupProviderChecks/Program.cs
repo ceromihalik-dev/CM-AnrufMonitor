@@ -127,6 +127,8 @@ await Check("Current explicit no-hit HTML accepts HTTP404", async () =>
     await Status(noHit, ReverseLookupStatus.NotFound, status: HttpStatusCode.NotFound));
 await Check("Current explicit no-hit HTML accepts HTTP200", async () =>
     await Status(noHit, ReverseLookupStatus.NotFound));
+await Check("Explicit no-hit tolerates line breaks and nonbreaking spaces in the result text", async () =>
+    await Status(noHit.Replace("keinen Eintrag", "keinen\n\u00a0  Eintrag", StringComparison.Ordinal), ReverseLookupStatus.NotFound, status: HttpStatusCode.NotFound));
 await Check("No-hit must echo the exact requested phone", async () =>
     await Status(noHit.Replace("value=\"030399760\"", "value=\"0301234567\"", StringComparison.Ordinal), ReverseLookupStatus.UnrecognizedResponse, status: HttpStatusCode.NotFound));
 await Check("No-hit without input echo remains unknown", async () =>
@@ -298,6 +300,21 @@ await Check("HTML entities decoded and display controls removed", async () =>
     await Status(JsonEntity("  Beispiel  &amp;  Söhne\u202e  ", "030399760"), ReverseLookupStatus.Found, "Beispiel & Söhne"));
 await Check("Current result markup binds labelled phone text to matching name", async () =>
     await Status(currentResult, ReverseLookupStatus.Found, "Sparkasse Schwaben-Bodensee", number: "+4983316090"));
+await Check("Labelled Tel. with colon matches the full number only", async () =>
+    await Status(currentResult.Replace("Tel.", "Tel.:", StringComparison.Ordinal), ReverseLookupStatus.Found, "Sparkasse Schwaben-Bodensee", number: "+4983316090"));
+await Check("Unrecognized response provides HTTP and nonpersonal structural diagnostics", async () =>
+{
+    using var handler = new StubHandler((_, _) => Task.FromResult(Html(unrecognizedResponse, HttpStatusCode.NotFound)));
+    using var provider = new DasOertlicheReverseLookupProvider(handler);
+    ReverseLookupResult result = await provider.LookupAsync(Number, CancellationToken.None);
+    Equal(ReverseLookupStatus.UnrecognizedResponse, result.Status);
+    Require(result.Message.Contains("HTTP 404", StringComparison.Ordinal)
+        && result.Message.Contains("Suchfeld passend:", StringComparison.Ordinal)
+        && result.Message.Contains("Trefferbereiche:", StringComparison.Ordinal), "Missing structural diagnostics.");
+    Require(!result.Message.Contains(Number, StringComparison.Ordinal)
+        && !result.Message.Contains("030399760", StringComparison.Ordinal)
+        && !result.Message.Contains("Beispielkontakt", StringComparison.Ordinal), "Diagnostic leaks page data.");
+});
 await Check("Current detail page accepts intentionally hidden Organization metadata", async () =>
     await Status(currentDetail, ReverseLookupStatus.Found, "Juwelier Leicht, Juwelier im Hotel Adlon", number: "+49302290212"));
 await Check("Current detail metadata still requires exact full number", async () =>

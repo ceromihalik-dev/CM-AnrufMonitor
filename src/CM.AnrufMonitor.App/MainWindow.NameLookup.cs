@@ -99,10 +99,10 @@ public partial class MainWindow
     private async void LookupSelectedName_Click(object sender, RoutedEventArgs e)
     {
         if (HistoryGrid.SelectedItem is CallRow row)
-            await BeginNameLookupAsync(new[] { row.Call }, "Ausgewählte Rufnummer");
+            await BeginNameLookupAsync(new[] { row.Call }, "Ausgewählte Rufnummer (erneute Online-Prüfung)", refreshCached: true);
     }
 
-    private async Task BeginNameLookupAsync(IReadOnlyList<CallRecord> snapshot, string scope, IReverseLookupProvider? testProvider = null)
+    private async Task BeginNameLookupAsync(IReadOnlyList<CallRecord> snapshot, string scope, IReverseLookupProvider? testProvider = null, bool refreshCached = false)
     {
         if (_nameLookupRunning || _savedOnExit) return;
         if (_smokeMode && testProvider is null) return;
@@ -118,12 +118,12 @@ public partial class MainWindow
         _nameLookupContextChanged = false;
         ResetNameLookupProblems();
         SetNameLookupBusy(true);
-        _nameLookupTask = RunNameLookupAsync(snapshot, scope, generation, _nameLookupCancellation.Token, testProvider);
+        _nameLookupTask = RunNameLookupAsync(snapshot, scope, generation, _nameLookupCancellation.Token, testProvider, refreshCached);
         await _nameLookupTask;
     }
 
     private async Task RunNameLookupAsync(IReadOnlyList<CallRecord> snapshot, string scope, int generation,
-        CancellationToken token, IReverseLookupProvider? testProvider)
+        CancellationToken token, IReverseLookupProvider? testProvider, bool refreshCached)
     {
         IReverseLookupProvider? provider = null;
         try
@@ -133,7 +133,7 @@ public partial class MainWindow
             var options = new ReverseLookupBatchOptions
             {
                 CountryCode = _settings.CountryCode, AreaCode = _settings.AreaCode,
-                RequestInterval = _smokeMode ? TimeSpan.Zero : TimeSpan.FromSeconds(2)
+                RequestInterval = _smokeMode ? TimeSpan.Zero : TimeSpan.FromSeconds(2), RefreshCached = refreshCached
             };
             ReverseLookupBatchPlan plan = service.CreatePlan(snapshot, call => PreferredName(call) is not null, options);
             NameLookupProgress.Maximum = Math.Max(1, plan.TotalCount);
